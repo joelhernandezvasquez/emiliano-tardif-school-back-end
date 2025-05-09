@@ -18,6 +18,22 @@ enum Role {
   super_admin
 }
 
+enum CourseLevel {
+  NIVEL_1_JESUS_ESTA_VIVO
+  NIVEL_2_JESUS_NOS_CAPACITA
+  NIVEL_3_JESUS_NOS_ENVIA
+}
+enum EventStatus {
+  upcoming
+  ongoing
+  completed
+  cancelled
+}
+
+enum Attendance {
+  present
+  absent
+}
 model Users{
   id    Int     @id @default(autoincrement())
   name String
@@ -26,3 +42,53 @@ model Users{
   role Role
   created_at DateTime @default(now())
 }
+
+model Students{
+  id    Int     @id @default(autoincrement())
+  first_name String
+  last_name String
+  email  String?  @unique
+  phone String
+  gender String
+  dirección String
+  parroquia String
+  asuntos_médicos String
+  created_at DateTime @default(now())
+  Enrollments Enrollments[]
+}
+
+model Courses{
+  id    Int     @id @default(autoincrement())
+  name String
+  description String
+  level CourseLevel
+  Events Events[]
+}
+
+model Events{
+  id    Int     @id @default(autoincrement())
+  name String
+  course_id Int
+  course    Courses @relation(fields: [course_id], references: [id])
+  price  Int
+  start_date DateTime
+  end_date DateTime
+  location String
+  status EventStatus
+  created_at DateTime @default(now())
+  Enrollments Enrollments[]
+}
+
+model Enrollments {
+  id          String   @id @default(uuid())
+  student_id  Int
+  event_id    Int
+  enrolled_at DateTime
+  notes       String?
+  attendance  Attendance?
+  student     Students @relation(fields: [student_id], references: [id])
+  event       Events   @relation(fields: [event_id], references: [id])
+}
+
+
+

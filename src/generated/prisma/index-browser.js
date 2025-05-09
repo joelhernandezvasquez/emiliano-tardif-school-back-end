@@ -129,6 +129,47 @@ exports.Prisma.UsersScalarFieldEnum = {
   created_at: 'created_at'
 };
 
+exports.Prisma.StudentsScalarFieldEnum = {
+  id: 'id',
+  first_name: 'first_name',
+  last_name: 'last_name',
+  email: 'email',
+  phone: 'phone',
+  gender: 'gender',
+  dirección: 'dirección',
+  parroquia: 'parroquia',
+  asuntos_médicos: 'asuntos_médicos',
+  created_at: 'created_at'
+};
+
+exports.Prisma.CoursesScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  level: 'level'
+};
+
+exports.Prisma.EventsScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  course_id: 'course_id',
+  price: 'price',
+  start_date: 'start_date',
+  end_date: 'end_date',
+  location: 'location',
+  status: 'status',
+  created_at: 'created_at'
+};
+
+exports.Prisma.EnrollmentsScalarFieldEnum = {
+  id: 'id',
+  student_id: 'student_id',
+  event_id: 'event_id',
+  enrolled_at: 'enrolled_at',
+  notes: 'notes',
+  attendance: 'attendance'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -138,13 +179,40 @@ exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
 exports.Role = exports.$Enums.Role = {
   admin: 'admin',
   super_admin: 'super_admin'
 };
 
+exports.CourseLevel = exports.$Enums.CourseLevel = {
+  NIVEL_1_JESUS_ESTA_VIVO: 'NIVEL_1_JESUS_ESTA_VIVO',
+  NIVEL_2_JESUS_NOS_CAPACITA: 'NIVEL_2_JESUS_NOS_CAPACITA',
+  NIVEL_3_JESUS_NOS_ENVIA: 'NIVEL_3_JESUS_NOS_ENVIA'
+};
+
+exports.EventStatus = exports.$Enums.EventStatus = {
+  upcoming: 'upcoming',
+  ongoing: 'ongoing',
+  completed: 'completed',
+  cancelled: 'cancelled'
+};
+
+exports.Attendance = exports.$Enums.Attendance = {
+  present: 'present',
+  absent: 'absent'
+};
+
 exports.Prisma.ModelName = {
-  Users: 'Users'
+  Users: 'Users',
+  Students: 'Students',
+  Courses: 'Courses',
+  Events: 'Events',
+  Enrollments: 'Enrollments'
 };
 
 /**
