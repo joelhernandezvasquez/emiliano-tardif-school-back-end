@@ -3,6 +3,7 @@ import { StudentController } from "./controllers";
 import { check } from "express-validator";
 import { FieldValidatorMiddleware } from "../middlewares/fieldValidator.middleware";
 import { StudentServices } from "../services/student.service";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 export class StudentsRoutes {
     
@@ -20,6 +21,7 @@ export class StudentsRoutes {
         check('asuntos_medicos').notEmpty(),
         ],
         FieldValidatorMiddleware.fieldValidator,
+        [AuthMiddleware.validateJWT],
         controller.createStudent
       );
 
