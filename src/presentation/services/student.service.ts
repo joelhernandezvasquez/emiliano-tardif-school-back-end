@@ -8,36 +8,59 @@ export class StudentServices{
     constructor(){}
 
     private checkIfStudentExist = async (student:Student):Promise<Boolean>=>{
-      const studentExist = await prisma.students.findFirst({
-        where: {
-            phone: student.phone,
-            first_name: { equals: student.first_name, mode: 'insensitive' },
-            last_name: { equals: student.last_name, mode: 'insensitive' }
-          }});
-      
-          return studentExist ? true : false;
+      try{
+         const studentExist = await prisma.students.findFirst({
+            where: {
+                phone: student.phone,
+                first_name: { equals: student.first_name, mode: 'insensitive' },
+                last_name: { equals: student.last_name, mode: 'insensitive' }
+              }});
+          
+              return studentExist ? true : false;
+      }
+      catch(err){
+         throw CustomError.internalServerError('internal server error');
+      }
+   
     }
 
     public createStudent = async (student:Student) =>{
-     const existedStudent = await this.checkIfStudentExist(student);
 
-     if(existedStudent){
-        throw CustomError.badRequest('Student already exist');
-     }
+      try{
+         const existedStudent = await this.checkIfStudentExist(student);
 
-     const newStudent = await prisma.students.create({
-        data:{
-           first_name:student.first_name,
-           last_name:student.last_name,
-           email:student.email,
-           phone:student.phone!,
-           gender:student.gender,
-           direccion:student.direccion,
-           parroquia:student.parroquia,
-           asuntos_medicos:student.asuntos_medicos
-        }
-     })
-     const {active,created_at,...studentEntity} = newStudent;
-      return {...studentEntity};
+         if(existedStudent){
+            throw CustomError.badRequest('Student already exist');
+         }
+    
+         const newStudent = await prisma.students.create({
+            data:{
+               first_name:student.first_name,
+               last_name:student.last_name,
+               email:student.email,
+               phone:student.phone!,
+               gender:student.gender,
+               direccion:student.direccion,
+               parroquia:student.parroquia,
+               asuntos_medicos:student.asuntos_medicos
+            }
+         })
+         const {active,created_at,...studentEntity} = newStudent;
+          return {...studentEntity};
+      }
+      catch(err){
+         throw CustomError.internalServerError('internal server error');
+      }
+    
+    }
+
+    public getAllStudents = async () =>{
+      try{
+       const students = await prisma.students.findMany();
+       return students;
+      }
+      catch(err){
+         throw CustomError.internalServerError('internal server error');
+      }
     }
 }

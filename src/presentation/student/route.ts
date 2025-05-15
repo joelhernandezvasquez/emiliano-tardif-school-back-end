@@ -4,7 +4,6 @@ import { check } from "express-validator";
 import { FieldValidatorMiddleware } from "../middlewares/fieldValidator.middleware";
 import { StudentServices } from "../services/student.service";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
-
 export class StudentsRoutes {
     
     static get routes(): Router{
@@ -24,6 +23,8 @@ export class StudentsRoutes {
         [AuthMiddleware.validateJWT],
         controller.createStudent
       );
+
+      router.get('/students',[AuthMiddleware.validateJWT],controller.getAllStudents)
 
        return router;
     }
