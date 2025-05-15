@@ -24,7 +24,10 @@ export class StudentsRoutes {
         controller.createStudent
       );
 
-      router.get('/students',[AuthMiddleware.validateJWT],controller.getAllStudents)
+      router.get('/students',[AuthMiddleware.validateJWT],controller.getAllStudents);
+
+      router.get('/:id',[AuthMiddleware.validateJWT],controller.getStudent);
+
 
        return router;
     }

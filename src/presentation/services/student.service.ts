@@ -24,6 +24,18 @@ export class StudentServices{
    
     }
 
+    private checkStudentById = async(id:number) =>{
+      try{
+         const student = await prisma.students.findUnique(({
+            where:{id:id}
+         }))
+         return student;
+      }
+      catch(err){
+         throw CustomError.internalServerError('Internal Server Error');
+      }
+    }
+
     public createStudent = async (student:Student) =>{
 
       try{
@@ -62,5 +74,21 @@ export class StudentServices{
       catch(err){
          throw CustomError.internalServerError('internal server error');
       }
+    }
+
+    public getAStudent = async (studentId:number) =>{
+     try{
+       const student = await this.checkStudentById(studentId);
+      
+       if(!student){
+         throw CustomError.notFound('Student does not exist');
+       }
+
+       return student;
+
+    }
+     catch(error){
+      throw CustomError.notFound('Student does not exist');
+     }
     }
 }

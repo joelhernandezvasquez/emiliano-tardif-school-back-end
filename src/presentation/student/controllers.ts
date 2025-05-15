@@ -8,6 +8,7 @@ export class StudentController{
     constructor(public readonly studentService:StudentServices){}
 
         private handleError = (error:unknown,res:Response) =>{
+          
            if(error instanceof CustomError){
              return res.status(error.statusCode).json({error:error.message})
            }
@@ -36,5 +37,13 @@ export class StudentController{
      this.studentService.getAllStudents()
      .then((students)=> res.json(students))
      .catch((error) => this.handleError(error,res))
+    }
+
+    getStudent = (req:Request,res:Response) =>{
+      const{id} = req.params;
+      
+      this.studentService.getAStudent(parseInt(id))
+      .then((student)=> res.json(student))
+      .catch((error)=> this.handleError(error,res));
     }
 }
