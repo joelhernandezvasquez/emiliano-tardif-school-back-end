@@ -91,4 +91,76 @@ export class StudentServices{
       throw CustomError.notFound('Student does not exist');
      }
     }
+
+    public deleteStudent = async (studentId:number) =>{
+      try{
+        const student = await this.checkStudentById(studentId);
+
+        if(!student){
+         throw CustomError.notFound('Student does not exist');
+        }
+       
+        await prisma.students.delete({
+         where:{id:studentId}
+        })
+
+        return {
+         success:true,
+         message:'Student has been deleted'
+        }
+
+      }
+      catch(error){
+         throw CustomError.notFound('Student does not exist');
+      }
+    }
+
+    public updateStudent = async (studentId:number,studentData:Student) =>{
+      try{
+        const student = await this.checkStudentById(studentId);
+
+        if(!student){
+         throw CustomError.notFound('Student does not exist');
+        }
+       
+        const updatedStudent = await prisma.students.update({
+         data:studentData,
+         where:{id:studentId}
+        })
+      
+
+        return {
+         success:true,
+         message:'Student has been updated',
+         student:updatedStudent
+        }
+
+      }
+      catch(error){
+         throw CustomError.notFound('Student does not exist');
+      }
+    }
+
+    public searchStudent = async (query: string) => {
+      try {
+        if (!query) {
+          return [];
+        }
+    
+        const students = await prisma.students.findMany({
+         
+         where: {
+            OR: [
+              { first_name: { contains: query, mode: 'insensitive' } },
+              { last_name: { contains: query, mode: 'insensitive' } },
+              { phone: { contains: query, mode: 'insensitive' } }
+            ]
+          }
+         
+         })
+         return students;
+      } catch (error) {
+        throw CustomError.internalServerError('Internal Server Error');
+      }
+    }
 }

@@ -25,9 +25,15 @@ export class StudentsRoutes {
       );
 
       router.get('/students',[AuthMiddleware.validateJWT],controller.getAllStudents);
-
+      
+      router.get('/search',[AuthMiddleware.validateJWT],controller.searchStudent);
+      
       router.get('/:id',[AuthMiddleware.validateJWT],controller.getStudent);
+      
+      router.delete('/:id',[AuthMiddleware.validateJWT],controller.deleteStudent);
 
+      router.put('/:id',[AuthMiddleware.validateJWT],controller.updateStudent);
+   
 
        return router;
     }

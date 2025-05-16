@@ -46,4 +46,38 @@ export class StudentController{
       .then((student)=> res.json(student))
       .catch((error)=> this.handleError(error,res));
     }
+
+    updateStudent = (req:Request,res:Response) =>{
+      const {id} = req.params;
+      const studentData: Student = {
+        first_name: req.body.first_name.trim(),
+        last_name: req.body.last_name.trim(),
+        email: req.body.email.trim().toLowerCase(),
+        phone: req.body.phone.trim(),
+        gender: req.body.gender,
+        direccion: req.body.direccion?.trim(),
+        parroquia: req.body.parroquia?.trim(),
+        asuntos_medicos: req.body.asuntos_medicos?.trim()
+      };
+
+      this.studentService.updateStudent(parseInt(id),studentData)
+      .then((updatedStudent)=> res.json(updatedStudent))
+      .catch((error) => this.handleError(error,res))
+    }
+
+    deleteStudent = (req:Request,res:Response) =>{
+       const {id} = req.params;
+       this.studentService.deleteStudent(parseInt(id))
+       .then((student)=> res.json(student))
+       .catch((error)=> this.handleError(error,res))
+    }
+
+    searchStudent = (req:Request,res:Response) =>{
+      const {q} = req.query;
+       this.studentService.searchStudent(q as string)
+       .then((students)=> res.json(students))
+       .catch((error)=> this.handleError(error,res))
+      
+
+    }
 }
