@@ -46,9 +46,10 @@ model Students{
   email  String?  @unique
   phone String
   gender String
-  dirección String
-  parroquia String
-  asuntos_médicos String
+  direccion String?
+  parroquia String?
+  asuntos_medicos String
+  active  Boolean @default(true)
   created_at DateTime @default(now())
   Enrollments Enrollments[]
 }
