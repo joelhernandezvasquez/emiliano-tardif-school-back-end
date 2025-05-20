@@ -22,6 +22,11 @@ export class CourseRoutes{
         FieldValidatorMiddleware.fieldValidator,
         [AuthMiddleware.validateJWT],
         courseController.createCourse
+    );
+
+    router.get('/courses',
+        [AuthMiddleware.validateJWT],
+        courseController.getCourses
     )
 
      return router;

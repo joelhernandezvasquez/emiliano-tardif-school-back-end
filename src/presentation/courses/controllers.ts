@@ -26,4 +26,11 @@ export class CourseController{
      .then((course)=> res.json(course))
      .catch((error)=> this.handleError(error,res))
    }
+
+   public getCourses = (req:Request,res:Response) =>{
+     
+     this.courseService.getCourses()
+     .then((courses)=> res.json(courses))
+     .catch((error)=> this.handleError(error,res))
+   }
 }

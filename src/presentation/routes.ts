@@ -12,7 +12,7 @@ export class AppRoutes {
     // Definir las rutas
     router.use('/api/auth',AuthRoutes.routes);
     router.use('/api/student',StudentsRoutes.routes);
-    router.use('/api/courses',CourseRoutes.routes);
+    router.use('/api/course',CourseRoutes.routes);
 
 
     return router;

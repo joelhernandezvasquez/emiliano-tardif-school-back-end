@@ -39,4 +39,15 @@ export class CourseServices{
         throw CustomError.badRequest('Course already exist');
      }
     }
+
+    public getCourses = async() =>{
+     try{
+       const courses = await prisma.courses.findMany();
+       return courses;
+     }
+     catch(error){
+        throw CustomError.internalServerError('Internal Server Error');
+     }
+    }
+
 }
