@@ -17,7 +17,7 @@ export class CourseRoutes{
          check('name').notEmpty().withMessage('Course name cannot be empty.'),
          check('description').notEmpty().withMessage("Course description cannot be empty"),
          check('level').notEmpty().withMessage('Course Level cannot be empty'),
-         check('level').isIn(['NIVEL_1_JESUS_ESTA_VIVO','NIVEL_2_JESUS_NOS_CAPACITA','NIVEL_3_JESUS_NOS_ENVIA']).withMessage('Course Level does not match.')
+         check('level').isIn(['NIVEL_1_JESUS_ESTA_VIVO','NIVEL_2_JESUS_NOS_CAPACITA','NIVEL_3_JESUS_NOS_ENVIA','RENACER_MUJERES','RENACER_HOMBRE','RENACER_PAREJAS']).withMessage('Course/Retreat Level does not match.')
         ],
         FieldValidatorMiddleware.fieldValidator,
         [AuthMiddleware.validateJWT],
@@ -27,6 +27,22 @@ export class CourseRoutes{
     router.get('/courses',
         [AuthMiddleware.validateJWT],
         courseController.getCourses
+    )
+    router.get('/:id',
+        [AuthMiddleware.validateJWT],
+        courseController.getACourse
+    )
+
+    router.put('/:id',
+        [
+         check('name').notEmpty().withMessage('Course name cannot be empty.'),
+         check('description').notEmpty().withMessage("Course description cannot be empty"),
+         check('level').notEmpty().withMessage('Course Level cannot be empty'),
+         check('level').isIn(['NIVEL_1_JESUS_ESTA_VIVO','NIVEL_2_JESUS_NOS_CAPACITA','NIVEL_3_JESUS_NOS_ENVIA','RENACER_MUJERES','RENACER_HOMBRE','RENACER_PAREJAS']).withMessage('Course/Retreat Level does not match.')
+        ],
+        FieldValidatorMiddleware.fieldValidator,
+        [AuthMiddleware.validateJWT],
+        courseController.updateCourse
     )
 
      return router;

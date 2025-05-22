@@ -17,6 +17,19 @@ export class CourseServices{
         }
     }
 
+
+    private checkCourseById = async (courseId:number) =>{
+        try{
+          const course = await prisma.courses.findUnique({
+            where:{id:courseId}
+          })
+          return course;
+        }
+        catch(error){
+            throw CustomError.internalServerError('Internal Server Error');
+        }
+    }
+
     public createCourse = async(course:Course) =>{
      try{
        const isCourseCreated = await this.checkCourse(course.name);
@@ -48,6 +61,45 @@ export class CourseServices{
      catch(error){
         throw CustomError.internalServerError('Internal Server Error');
      }
+    }
+
+    public getACourse = async (courseId:number) =>{
+      try{
+        const course = await this.checkCourseById(courseId);
+
+        if(!course){
+          throw CustomError.badRequest('Course does not exist');
+        }
+        return course;
+      }
+      catch(error){
+         throw CustomError.badRequest('Course does not exist');
+      }
+    }
+
+    public updateCourse = async(courseId:number,courseData:Course) =>{
+      try{
+         const course = await this.checkCourseById(courseId);
+         
+         if(!course){
+           throw CustomError.badRequest('Course does not exist');
+         }
+
+         const updatedCourse = await prisma.courses.update({
+          data:courseData,
+          where:{id:courseId}
+         })
+
+         return{
+          success:true,
+          message:'Course has been updated',
+          course:updatedCourse
+         }
+
+      }
+      catch(error){
+      throw CustomError.badRequest('Course does not exist');
+      }
     }
 
 }

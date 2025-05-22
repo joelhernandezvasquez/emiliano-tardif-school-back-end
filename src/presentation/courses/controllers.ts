@@ -28,9 +28,30 @@ export class CourseController{
    }
 
    public getCourses = (req:Request,res:Response) =>{
-     
      this.courseService.getCourses()
      .then((courses)=> res.json(courses))
+     .catch((error)=> this.handleError(error,res))
+   }
+
+   public getACourse = (req:Request,res:Response) => {
+    const {id} = req.params;
+     
+    this.courseService.getACourse(parseInt(id))
+     .then((courses)=> res.json(courses))
+     .catch((error)=> this.handleError(error,res))
+   }
+
+   public updateCourse = (req:Request,res:Response) =>{
+     const {id} = req.params;
+
+     const courseData = {
+       name:req.body.name.trim(),
+       description:req.body.description.trim(),
+       level:req.body.level.trim()
+     }
+     
+     this.courseService.updateCourse(parseInt(id),courseData)
+     .then((course)=> res.json(course))
      .catch((error)=> this.handleError(error,res))
    }
 }
