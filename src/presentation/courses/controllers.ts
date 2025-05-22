@@ -49,9 +49,22 @@ export class CourseController{
        description:req.body.description.trim(),
        level:req.body.level.trim()
      }
-     
+
      this.courseService.updateCourse(parseInt(id),courseData)
      .then((course)=> res.json(course))
      .catch((error)=> this.handleError(error,res))
+   }
+
+   public deleteCourse = (req:Request,res:Response) =>{
+     const {id} = req.params;
+     if(!id){
+      return res.status(400).send("Course ID was not provided");
+     }
+    
+     this.courseService.deleteCourse(parseInt(id))
+     .then((course)=> res.json(course))
+     .catch((error)=> this.handleError(error,res))
+
+
    }
 }

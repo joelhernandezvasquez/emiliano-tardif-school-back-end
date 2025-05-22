@@ -44,6 +44,10 @@ export class CourseRoutes{
         [AuthMiddleware.validateJWT],
         courseController.updateCourse
     )
+    router.delete('/:id',
+    [AuthMiddleware.validateJWT],
+    courseController.deleteCourse
+    )
 
      return router;
     }

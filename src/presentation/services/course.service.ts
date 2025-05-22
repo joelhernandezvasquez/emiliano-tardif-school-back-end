@@ -102,4 +102,25 @@ export class CourseServices{
       }
     }
 
+    public deleteCourse = async(courseId:number) =>{
+      try{
+        const course = await this.checkCourseById(courseId);
+        
+        if(!course){
+          throw CustomError.notFound('Course not found');
+        }
+         await prisma.courses.delete({
+          where:{id:courseId}
+         })
+
+         return{
+          success:true,
+          message:'Course/Retire has been deleted'
+         }
+      }
+      catch(error){
+        throw CustomError.notFound('Course not found')
+      }
+    }
+
 }
