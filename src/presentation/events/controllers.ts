@@ -31,4 +31,34 @@ export class EventController {
     .then((event)=> res.json(event))
     .catch((error)=> this.handleError(error,res))
   }
+
+  public getEvents = (req:Request,res:Response) =>{
+   this.eventService.getAllEvents()
+   .then((eventList)=> res.json(eventList))
+   .catch((error)=> this.handleError(error,res))
+  }
+
+  public getEvent = (req:Request,res:Response) =>{
+     const {id} = req.params;
+     this.eventService.getEvent(parseInt(id))
+     .then((event)=> res.json(event))
+     .catch((error)=> this.handleError(error,res))
+  }
+
+  public updateEvent = (req:Request,res:Response) =>{
+     const {id} = req.params;
+    const eventData:Event = {
+        name:req.body.name.trim(),
+        course_id:req.body.course_id,
+        price:req.body.price,
+        start_date: req.body.start_date.trim(),
+        end_date:req.body.end_date.trim(),
+        location:req.body.location.trim(),
+        status:req.body.status.trim()
+    }
+    
+    this.eventService.updateEvent(eventData,parseInt(id))
+    .then((event)=> res.json(event))
+    .catch((error)=> this.handleError(error,res))
+  }
 }

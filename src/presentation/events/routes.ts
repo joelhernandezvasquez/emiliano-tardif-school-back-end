@@ -24,9 +24,33 @@ export class EventRoutes{
     ],
     FieldValidatorMiddleware.fieldValidator,
     [AuthMiddleware.validateJWT],
-    
     controller.createEvent
 )
+
+   router.get('/list',
+    [AuthMiddleware.validateJWT],
+    controller.getEvents
+   )
+
+   router.get('/:id',
+    [AuthMiddleware.validateJWT],
+    controller.getEvent
+   )
+
+   router.put('/:id',
+    [
+     check('name').notEmpty().withMessage("Name of the event is required."),
+     check('course_id').notEmpty().withMessage('Course ID is required.'),
+     check('price').notEmpty().withMessage('Price is required.'),
+     check('start_date').notEmpty().withMessage('Please provide the day the event start.'),
+     check('end_date').notEmpty().withMessage('Please provide the day the event ends.'),
+     check('location').notEmpty().withMessage('Location cannot be empty.'),
+     check('status').notEmpty().withMessage('Status of the event cannot be empty.'),
+     check('status').isIn(['upcoming','ongoing','completed','cancelled']).withMessage('status is invalid.')
+    ],
+    [AuthMiddleware.validateJWT],
+    controller.updateEvent
+   )
    return router;
   }
 }
