@@ -18,7 +18,7 @@ export class CourseServices{
     }
 
 
-    private checkCourseById = async (courseId:number) =>{
+    public static checkCourseById = async (courseId:number) =>{
         try{
           const course = await prisma.courses.findUnique({
             where:{id:courseId}
@@ -65,7 +65,7 @@ export class CourseServices{
 
     public getACourse = async (courseId:number) =>{
       try{
-        const course = await this.checkCourseById(courseId);
+        const course = await CourseServices.checkCourseById(courseId);
 
         if(!course){
           throw CustomError.badRequest('Course does not exist');
@@ -79,7 +79,7 @@ export class CourseServices{
 
     public updateCourse = async(courseId:number,courseData:Course) =>{
       try{
-         const course = await this.checkCourseById(courseId);
+         const course = await CourseServices.checkCourseById(courseId);
          
          if(!course){
            throw CustomError.badRequest('Course does not exist');
@@ -104,7 +104,7 @@ export class CourseServices{
 
     public deleteCourse = async(courseId:number) =>{
       try{
-        const course = await this.checkCourseById(courseId);
+        const course = await CourseServices.checkCourseById(courseId);
         
         if(!course){
           throw CustomError.notFound('Course not found');
