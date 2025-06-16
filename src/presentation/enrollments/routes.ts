@@ -14,12 +14,16 @@ export class EnrollmentRoutes{
         [
              check('student_id').notEmpty().withMessage("Student ID is required."),
              check('event_id').notEmpty().withMessage('Event ID is required.'),
-             check('attendance').isIn(['present','absence']).withMessage('attendance is invalid.')
+             check('attendance').isIn(['present','absence','cancelled']).withMessage('attendance is invalid.')
         ],
        [AuthMiddleware.validateJWT],
        controller.createEnrollment
     );
-      
-       return router;
+
+    router.delete('/:enrollmentId',[AuthMiddleware.validateJWT],controller.deleteEnrollment)
+    router.put('/:enrollmentId',[AuthMiddleware.validateJWT],controller.updateEnrollment)
+    
+
+   return router;
     }
 }

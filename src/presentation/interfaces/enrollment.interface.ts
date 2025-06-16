@@ -6,3 +6,8 @@ export interface Enrollment{
   notes?:string,
   attendance : Attendance
 }
+
+export interface EnrollmentUpdate{
+   notes?:string,
+  attendance : Attendance
+}
