@@ -4,12 +4,16 @@ import { EventService } from "../services/event.service";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { check } from "express-validator";
 import { FieldValidatorMiddleware } from "../middlewares/fieldValidator.middleware";
+import { EnrollmentController } from "../enrollments/controller";
+import { EnrollmentService } from "../services/enrollment.service";
 
 export class EventRoutes{
   static get routes():Router{
    const router = Router();
    const eventService = new EventService();
+   const enrollmentService = new EnrollmentService();
    const controller = new EventController(eventService);
+   const enrollmentController = new EnrollmentController(enrollmentService);
 
    router.post('/create',
     [
@@ -51,6 +55,11 @@ export class EventRoutes{
     [AuthMiddleware.validateJWT],
     controller.updateEvent
    )
+
+   router.get('/:eventId/enrollments',[AuthMiddleware.validateJWT],enrollmentController.getEnrollmentsForEvent)
+   
+  
+   
    return router;
   }
 }

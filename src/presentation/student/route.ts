@@ -4,12 +4,16 @@ import { check } from "express-validator";
 import { FieldValidatorMiddleware } from "../middlewares/fieldValidator.middleware";
 import { StudentServices } from "../services/student.service";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { EnrollmentService } from "../services/enrollment.service";
+import { EnrollmentController } from "../enrollments/controller";
 export class StudentsRoutes {
     
     static get routes(): Router{
        const router = Router();
        const studentService = new StudentServices();
        const controller = new StudentController(studentService);
+       const enrollmentService = new EnrollmentService();
+       const enrollmentController = new EnrollmentController(enrollmentService);
 
        router.post('/students',
         [
@@ -34,6 +38,7 @@ export class StudentsRoutes {
 
       router.put('/:id',[AuthMiddleware.validateJWT],controller.updateStudent);
    
+      router.get('/:id/enrollments',[AuthMiddleware.validateJWT],enrollmentController.getStudentEnrollmentHistory);
 
        return router;
     }

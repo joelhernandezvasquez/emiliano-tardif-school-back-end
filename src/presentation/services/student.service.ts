@@ -24,7 +24,7 @@ export class StudentServices{
    
     }
 
-    private checkStudentById = async(id:number) =>{
+    public checkStudentById = async(id:number) =>{
       try{
          const student = await prisma.students.findUnique(({
             where:{id:id}
