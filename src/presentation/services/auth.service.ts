@@ -45,11 +45,11 @@ export class AuthService{
         where:{email}
      });
 
-    if(!user) throw CustomError.badRequest('Email not exist');
+    if(!user) throw CustomError.badRequest('Email not exist in our records.');
 
     const isMatching = bcryptAdapter.compare(password,user.password_hash);
 
-     if(!isMatching) throw CustomError.badRequest('Password is invalid');
+     if(!isMatching) throw CustomError.badRequest('Password is invalid.');
 
      const{password_hash,...userEntity} = user;
 

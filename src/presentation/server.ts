@@ -1,5 +1,6 @@
 import express, { Router } from 'express';
 import path from 'path';
+import cors from 'cors';
 
 interface Options {
   port: number;
@@ -27,6 +28,10 @@ export class Server {
   
   async start() {
     
+   this.app.use(cors({
+        origin: 'http://localhost:3000',
+        credentials: true // Only if you're using cookies or auth headers
+    }));
 
     //* Middlewares
     this.app.use( express.json() ); // raw
@@ -56,3 +61,4 @@ export class Server {
   }
 
 }
+
