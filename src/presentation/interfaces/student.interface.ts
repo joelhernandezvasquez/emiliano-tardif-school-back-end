@@ -8,3 +8,9 @@ export interface Student{
     parroquia?: string,
     asuntos_medicos:string,
 }
+
+export interface StudentsSummary{
+    total:number,
+    active:number,
+    inactive:number
+}

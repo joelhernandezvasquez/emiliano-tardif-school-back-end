@@ -27,7 +27,8 @@ export class StudentsRoutes {
         [AuthMiddleware.validateJWT],
         controller.createStudent
       );
-
+      router.get('/summary',[AuthMiddleware.validateJWT],controller.getSummary);
+      
       router.get('/students',[AuthMiddleware.validateJWT],controller.getAllStudents);
       
       router.get('/search',[AuthMiddleware.validateJWT],controller.searchStudent);
@@ -40,6 +41,8 @@ export class StudentsRoutes {
    
       router.get('/:id/enrollments',[AuthMiddleware.validateJWT],enrollmentController.getStudentEnrollmentHistory);
 
+  
+    
        return router;
     }
 }

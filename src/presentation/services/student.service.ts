@@ -1,7 +1,7 @@
 
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
-import { Student } from "../interfaces/student.interface";
+import { Student, StudentsSummary } from "../interfaces/student.interface";
 
 
 export class StudentServices{
@@ -161,6 +161,26 @@ export class StudentServices{
          return students;
       } catch (error) {
         throw CustomError.internalServerError('Internal Server Error');
+      }
+    }
+
+    public getStudentsSummary = async ():Promise<StudentsSummary> =>{
+      try{
+        const [total,active,inactive] = await Promise.all([
+          prisma.students.count(),
+          prisma.students.count({ where: { active: true } }),
+          prisma.students.count({where:{active:false}})
+        ])
+
+       return{
+        total,
+        active,
+        inactive
+       }
+      }
+      catch(error){
+        console.log(error);
+         throw CustomError.internalServerError('Internal Server Error');
       }
     }
 }
