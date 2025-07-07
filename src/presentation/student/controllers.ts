@@ -77,7 +77,12 @@ export class StudentController{
        this.studentService.searchStudent(q as string)
        .then((students)=> res.json(students))
        .catch((error)=> this.handleError(error,res))
-      
+    }
 
+    getSummary = (req:Request,res:Response) => {
+      console.log('endpoint called');
+      this.studentService.getStudentsSummary()
+      .then((students)=> res.json(students))
+      .catch((error)=> this.handleError(error,res))
     }
 }
