@@ -57,7 +57,8 @@ export class StudentController{
         gender: req.body.gender,
         direccion: req.body.direccion?.trim(),
         parroquia: req.body.parroquia?.trim(),
-        asuntos_medicos: req.body.asuntos_medicos?.trim()
+        asuntos_medicos: req.body.asuntos_medicos?.trim(),
+        active:req.body.active
       };
 
       this.studentService.updateStudent(parseInt(id),studentData)
@@ -80,7 +81,6 @@ export class StudentController{
     }
 
     getSummary = (req:Request,res:Response) => {
-      console.log('endpoint called');
       this.studentService.getStudentsSummary()
       .then((students)=> res.json(students))
       .catch((error)=> this.handleError(error,res))

@@ -7,6 +7,7 @@ export interface Student{
     direccion?: string,
     parroquia?: string,
     asuntos_medicos:string,
+    active?:boolean
 }
 
 export interface StudentsSummary{
