@@ -68,7 +68,27 @@ export class StudentServices{
 
     public getAllStudents = async () =>{
       try{
-       const students = await prisma.students.findMany();
+       const students = await prisma.students.findMany({
+        select:{
+          id:true,
+          first_name:true,
+          last_name:true,
+          email:true,
+          phone:true,
+          gender:true,
+          direccion:true,
+          parroquia:true,
+          asuntos_medicos:true,
+          active:true,
+          created_at:true,
+          _count:{
+            select:{Enrollments:true}
+          }
+        }
+       })
+
+      
+
        return students;
       }
       catch(err){
