@@ -80,7 +80,6 @@ export class StudentController{
     }
 
     getSummary = (req:Request,res:Response) => {
-      console.log('endpoint called');
       this.studentService.getStudentsSummary()
       .then((students)=> res.json(students))
       .catch((error)=> this.handleError(error,res))
