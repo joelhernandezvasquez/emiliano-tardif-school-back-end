@@ -57,7 +57,8 @@ export class StudentController{
         gender: req.body.gender,
         direccion: req.body.direccion?.trim(),
         parroquia: req.body.parroquia?.trim(),
-        asuntos_medicos: req.body.asuntos_medicos?.trim()
+        asuntos_medicos: req.body.asuntos_medicos?.trim(),
+        active:req.body.active
       };
 
       this.studentService.updateStudent(parseInt(id),studentData)
