@@ -1,9 +1,19 @@
 
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
-import { Student, StudentsSummary } from "../interfaces/student.interface";
+import { Student, StudentQueryParams, StudentsSummary } from "../interfaces/student.interface";
+import { Prisma } from "@prisma/client";
 
-
+enum filterConditionValues{
+    Active = 'Active',
+    Inactive = 'Inactive',
+    Recent = 'Recent',
+    Oldest = 'Oldest',
+    AZ = 'Name (A-Z)',
+    ZA = 'Name (Z-A)',
+    MostCourses='Most Courses',
+    LeastCourses = 'Least Courses'
+}
 export class StudentServices{
     constructor(){}
 
@@ -158,23 +168,85 @@ export class StudentServices{
       }
     }
 
-    public searchStudent = async (query: string) => {
-      try {
-        if (!query) {
-          return [];
-        }
-    
-        const students = await prisma.students.findMany({
-         
-         where: {
-            OR: [
+    private getFilterStudentCondition = (query:string) =>{
+ 
+       const conditions:any[] = [
               { first_name: { contains: query, mode: 'insensitive' } },
               { last_name: { contains: query, mode: 'insensitive' } },
-              { phone: { contains: query, mode: 'insensitive' } }
-            ]
+              { phone: { contains: query, mode: 'insensitive' } },
+              { email: { contains: query, mode: 'insensitive' } },
+        ];
+    
+        const conditionsFilter:any = [
+          query === filterConditionValues.Active ? {active:true} : {},
+          query === filterConditionValues.Inactive ? {active:false}:{},
+        ]
+
+      return [...conditions,...conditionsFilter];
+    }
+
+        private getSortedStudent= (sortBy:string) =>{
+
+          if(!sortBy){
+            return undefined;
           }
-         
+         const sortMapping: Record<string, Record<string, Prisma.SortOrder>> = {
+            [filterConditionValues.Recent]: { created_at: Prisma.SortOrder.desc },
+            [filterConditionValues.Oldest]: {created_at: Prisma.SortOrder.asc },
+            [filterConditionValues.AZ]: {first_name: Prisma.SortOrder.asc },
+            [filterConditionValues.ZA]: {first_name: Prisma.SortOrder.desc },
+        };
+    
+        const normalizedSortBy = sortBy=== 'A to Z' ? filterConditionValues.MostCourses : 
+                                 sortBy === 'Z to A' ? filterConditionValues.MostCourses: 
+                                 sortBy;
+    
+        return sortMapping[normalizedSortBy] || undefined;
+    }
+
+    public searchStudent = async (studentQueryParams: StudentQueryParams) => {
+      const {query,page,sortBy} = studentQueryParams;
+      
+      try {
+        const ITEMS_PER_PAGE = 7;
+        const skip = (page -1) * ITEMS_PER_PAGE;
+        const filterCondition = this.getFilterStudentCondition(query);
+        const sortedCondition = this.getSortedStudent(sortBy!);
+
+           let orderByClause: any = undefined;
+            if (sortBy === filterConditionValues.MostCourses) {
+              orderByClause = [{ Enrollments: { _count: 'desc' } }];
+            } else if (sortBy === filterConditionValues.LeastCourses) {
+              orderByClause = [{ Enrollments: { _count: 'asc' } }];
+            } else if (sortedCondition) {
+              orderByClause = [sortedCondition];
+            }
+      
+        const students = await prisma.students.findMany({
+           select:{
+          id:true,
+          first_name:true,
+          last_name:true,
+          email:true,
+          phone:true,
+          gender:true,
+          direccion:true,
+          parroquia:true,
+          asuntos_medicos:true,
+          active:true,
+          created_at:true,
+          _count:{
+            select:{Enrollments:true}
+          }
+        },
+         where: {
+            OR:query!="All" ? filterCondition : undefined
+          },
+          orderBy: orderByClause,
+           take:ITEMS_PER_PAGE,
+           skip:skip
          })
+         
          return students;
       } catch (error) {
         throw CustomError.internalServerError('Internal Server Error');

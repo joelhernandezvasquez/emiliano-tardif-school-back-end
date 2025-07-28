@@ -74,8 +74,14 @@ export class StudentController{
     }
 
     searchStudent = (req:Request,res:Response) =>{
-      const {q} = req.query;
-       this.studentService.searchStudent(q as string)
+       const {query, page, sortBy} = req.query; 
+
+       const studentQueryParams = {
+        query: typeof query === 'string' ? query : '',
+        page: +(page ?? 1),
+        sortBy: typeof sortBy === 'string' ? sortBy : undefined
+       }
+       this.studentService.searchStudent(studentQueryParams)
        .then((students)=> res.json(students))
        .catch((error)=> this.handleError(error,res))
     }
