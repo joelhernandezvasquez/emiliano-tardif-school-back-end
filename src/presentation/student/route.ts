@@ -32,6 +32,8 @@ export class StudentsRoutes {
       router.get('/students',[AuthMiddleware.validateJWT],controller.getAllStudents);
       
       router.get('/search',[AuthMiddleware.validateJWT],controller.searchStudent);
+
+      router.get('/pagination',[AuthMiddleware.validateJWT],controller.getStudentPagination)
       
       router.get('/:id',[AuthMiddleware.validateJWT],controller.getStudent);
       
