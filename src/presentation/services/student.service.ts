@@ -1,8 +1,8 @@
 
 import { prisma } from "../../data/postgres";
+import { Prisma } from "@prisma/client";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Student, StudentQueryParams, StudentsSummary } from "../interfaces/student.interface";
-import { Prisma } from "@prisma/client";
 
 enum filterConditionValues{
     Active = 'Active',
@@ -73,7 +73,6 @@ export class StudentServices{
       catch(err){
          throw CustomError.internalServerError('internal server error');
       }
-    
     }
 
     public getAllStudents = async () =>{
@@ -169,7 +168,6 @@ export class StudentServices{
     }
 
     private getFilterStudentCondition = (query:string) =>{
- 
        const conditions:any[] = [
               { first_name: { contains: query, mode: 'insensitive' } },
               { last_name: { contains: query, mode: 'insensitive' } },
@@ -184,7 +182,6 @@ export class StudentServices{
 
       return [...conditions,...conditionsFilter];
     }
-
         private getSortedStudent= (sortBy:string) =>{
 
           if(!sortBy){
@@ -204,6 +201,19 @@ export class StudentServices{
         return sortMapping[normalizedSortBy] || undefined;
     }
 
+    private getOrderClause = (sortBy:string) =>{
+
+         if (sortBy === filterConditionValues.MostCourses) {
+             return [{ Enrollments: { _count: 'desc' } }];
+            } 
+            
+         if(sortBy === filterConditionValues.LeastCourses) {
+            return [{ Enrollments: { _count: 'asc' } }];
+
+          } 
+        return this.getSortedStudent(sortBy);
+    }
+
     public searchStudent = async (studentQueryParams: StudentQueryParams) => {
       const {query,page,sortBy} = studentQueryParams;
       
@@ -211,17 +221,8 @@ export class StudentServices{
         const ITEMS_PER_PAGE = 7;
         const skip = (page -1) * ITEMS_PER_PAGE;
         const filterCondition = this.getFilterStudentCondition(query);
-        const sortedCondition = this.getSortedStudent(sortBy!);
-
-           let orderByClause: any = undefined;
-            if (sortBy === filterConditionValues.MostCourses) {
-              orderByClause = [{ Enrollments: { _count: 'desc' } }];
-            } else if (sortBy === filterConditionValues.LeastCourses) {
-              orderByClause = [{ Enrollments: { _count: 'asc' } }];
-            } else if (sortedCondition) {
-              orderByClause = [sortedCondition];
-            }
-      
+        let orderByClause:any = this.getOrderClause(sortBy!);;
+            
         const students = await prisma.students.findMany({
            select:{
           id:true,
