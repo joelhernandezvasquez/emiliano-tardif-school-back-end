@@ -55,14 +55,36 @@ export class AuthService{
 
     const token = await JwtAdapter.generateToken({id:user.id});
    
+    const expiresAt = JwtAdapter.decodeTokenExpiration(token as string);
 
     if(!token)
     throw CustomError.internalServerError('Error while creating JWT')
 
       return{
         user:userEntity,
-        token
+        token,
+        expiresAt
       }
+    }
+
+    public refreshToken = async (userId:number) =>{
+      try{
+         const userIsValid = await prisma.users.findUnique({
+        where:{id:userId}
+      })
+      
+      if(!userIsValid){
+       throw CustomError.internalServerError('invalid user');
+      }
+      const token = await JwtAdapter.generateToken({id:userId});
+      return token;
+      }
+
+      catch(error){
+        throw CustomError.internalServerError('Error while generating JWT')
+      }
+      
+     
     }
 
    

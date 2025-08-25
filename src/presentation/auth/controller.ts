@@ -30,5 +30,13 @@ export class AuthController {
       .then((user) => res.json(user))
       .catch(error => this.handleError(error,res))
     }
+    
+       refreshToken = (req:Request,res:Response) =>{
+      const {id} = req.params;
+
+      this.authService.refreshToken(+id)
+      .then((user) => res.json(user))
+      .catch(error => this.handleError(error,res))
+    }
 
 }
