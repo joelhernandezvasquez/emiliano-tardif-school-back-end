@@ -3,6 +3,7 @@ import { prisma } from "../../data/postgres";
 import { Prisma } from "@prisma/client";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Student, StudentQueryParams, StudentsSummary } from "../interfaces/student.interface";
+import { count } from "console";
 
 enum filterConditionValues{
     Active = 'Active',
@@ -221,7 +222,7 @@ export class StudentServices{
         const ITEMS_PER_PAGE = 7;
         const skip = (page -1) * ITEMS_PER_PAGE;
         const filterCondition = this.getFilterStudentCondition(query);
-        let orderByClause:any = this.getOrderClause(sortBy!);;
+        let orderByClause:any = this.getOrderClause(sortBy!);
             
         const students = await prisma.students.findMany({
            select:{
@@ -272,5 +273,21 @@ export class StudentServices{
         console.log(error);
          throw CustomError.internalServerError('Internal Server Error');
       }
+    }
+    getStudentPagination = async () =>{
+     try{
+        const students = await prisma.students.count();
+        const ITEMS_PER_PAGE = 7;
+        const totalPages = Math.ceil(Number(students) / ITEMS_PER_PAGE);
+
+      return{
+        totalPages,
+        totalStudents:students
+      }
+     }
+     catch(error){
+      console.log(error);
+      throw CustomError.internalServerError('Internal Server Error');
+     }
     }
 }

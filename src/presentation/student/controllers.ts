@@ -91,4 +91,10 @@ export class StudentController{
       .then((students)=> res.json(students))
       .catch((error)=> this.handleError(error,res))
     }
+
+    getStudentPagination = (req:Request,res:Response) =>{
+      this.studentService.getStudentPagination()
+      .then((students)=> res.json(students))
+      .catch((error)=> this.handleError(error,res))
+    }
 }
