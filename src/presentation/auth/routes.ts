@@ -32,6 +32,10 @@ export class AuthRoutes {
       controller.register
     );
 
+    router.get('/refresh-token/:id',
+      controller.refreshToken
+    )
+
 
 
     return router;
