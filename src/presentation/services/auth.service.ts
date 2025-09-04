@@ -3,7 +3,6 @@ import { JwtAdapter } from "../../config/jwt.adapter";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 
-
 interface User{
     email:string,
     password:string
