@@ -92,6 +92,13 @@ export class StudentController{
       .catch((error)=> this.handleError(error,res))
     }
 
+    getStudentProgress = (req:Request,res:Response) =>{
+      const {id} = req.params;
+      this.studentService.getStudentProgress(+id)
+      .then((student)=> res.json(student))
+      .catch((error)=> this.handleError(error,res))
+    }
+
     getStudentPagination = (req:Request,res:Response) =>{
       this.studentService.getStudentPagination()
       .then((students)=> res.json(students))

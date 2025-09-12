@@ -1,3 +1,4 @@
+import { Util } from "../../config/util";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Course } from "../interfaces/course.interface";
@@ -16,7 +17,6 @@ export class CourseServices{
             throw CustomError.internalServerError('Internal Server Error');
         }
     }
-
 
     public static checkCourseById = async (courseId:number) =>{
         try{
@@ -123,4 +123,42 @@ export class CourseServices{
       }
     }
 
+    public static getTotalCourse = async() =>{
+      try{
+       const totalCourses = await prisma.courses.count();
+       return totalCourses - 2; // we make it minus 2 since either Man or Women will not take renacer de hombres o mujeres
+      }
+      catch(error){
+        throw CustomError.internalServerError(error as string);
+      }
+    }
+
+     public static getCoursesByLevel = async() =>{
+      try{
+       const coursesByLevel = await prisma.courses.groupBy({
+          by:['level'],
+          _count:{
+            level:true
+          },
+          orderBy: { level: 'asc' }
+       })
+       
+       const coursesFormatted = coursesByLevel.map((item)=>{
+        return{
+          level:Util.formatCourseLevel(item.level.toString()),
+          courseLevelQuantity:item._count.level
+        }
+       
+       })
+       
+       return coursesFormatted;
+      
+      }
+      catch(error){
+        throw CustomError.internalServerError(error as string);
+      }
+    }
+
 }
+
+

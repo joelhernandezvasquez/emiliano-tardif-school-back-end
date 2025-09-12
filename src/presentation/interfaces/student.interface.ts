@@ -20,3 +20,5 @@ export interface StudentQueryParams{
     page:number,
     sortBy?:string
 }
+
+

@@ -3,7 +3,8 @@ import { prisma } from "../../data/postgres";
 import { Prisma } from "@prisma/client";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Student, StudentQueryParams, StudentsSummary } from "../interfaces/student.interface";
-import { count } from "console";
+import { CourseServices } from "./course.service";
+import { Util } from "../../config/util";
 
 enum filterConditionValues{
     Active = 'Active',
@@ -15,8 +16,12 @@ enum filterConditionValues{
     MostCourses='Most Courses',
     LeastCourses = 'Least Courses'
 }
+
 export class StudentServices{
-    constructor(){}
+
+    constructor(
+      private courseService:CourseServices
+    ){}
 
     private checkIfStudentExist = async (student:Student):Promise<Boolean>=>{
       try{
@@ -155,7 +160,6 @@ export class StudentServices{
          where:{id:studentId}
         })
       
-
         return {
          success:true,
          message:'Student has been updated',
@@ -274,6 +278,110 @@ export class StudentServices{
          throw CustomError.internalServerError('Internal Server Error');
       }
     }
+
+    private getStudentCourses = async(id:number) =>{
+       try{
+          const studentCourses = await prisma.studentCourse.findMany({
+              where: {
+                student_id: id,
+              },
+              select: {
+                course: {
+                  select: {
+                    level: true,
+                    name:true,
+                  },
+                },
+                 student:{
+                   select:{
+                    gender:true
+                   }
+                 }
+              },
+              
+            })
+            return studentCourses;
+       }
+       catch(error){
+        console.log(error)
+        throw CustomError.internalServerError(error as string)
+       }
+    }
+
+    private getStudentCoursesCount = async(id:number) =>{
+       try{
+          const studentCourses = await prisma.studentCourse.count(({where:{student_id:id}}))
+          return studentCourses;
+       }
+       catch(error){
+        console.log(error)
+        throw CustomError.internalServerError(error as string)
+       }
+    }
+
+    private getCoursesCompletedByLevel = (studentCourses:any []) =>{
+      
+      const completedByLevel = Object.entries(
+              studentCourses.reduce((acc, sc) => {
+                const level = Util.formatCourseLevel(sc.course.level);
+                acc[level] = (acc[level] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>)
+            ).map(([level, count]) => ({ level, count }));
+        
+            return completedByLevel;
+    }
+
+    public async getStudentProgress(id: number) {
+      try {
+        const [totalCourses, totalCoursesTaken, coursesByLevel, studentCourses] =
+          await Promise.all([
+            CourseServices.getTotalCourse(),
+            this.getStudentCoursesCount(id),
+            CourseServices.getCoursesByLevel(),
+            this.getStudentCourses(id),
+          ]);
+
+          if (!studentCourses.length) {
+            throw CustomError.notFound(`No courses found for student with id ${id}`);
+          }
+
+          const studentGender = studentCourses[0].student.gender;
+          const excludedLevel =
+            studentGender === "M" ? "Renacer Mujeres" : "Renacer Hombres";
+
+          const completedByLevel = this.getCoursesCompletedByLevel(studentCourses);
+
+          // Create a map for quick lookup of completed counts by level
+          const completedMap = new Map(
+            completedByLevel.map((c) => [c.level, c.count])
+          );
+
+          const coursesTakenByLevel = coursesByLevel.map((c) => ({
+            level: c.level,
+            courseLevelQuantity: c.courseLevelQuantity,
+            coursesCompleted: completedMap.get(c.level) ?? 0,
+          }));
+
+          const filteredCoursesTakenByLevel = coursesTakenByLevel.filter(
+            (c) => c.level !== excludedLevel
+          );
+
+          return {
+            totalCourses,
+            totalCoursesTaken,
+            coursesTakenByLevel: filteredCoursesTakenByLevel,
+          };
+        } catch (error) {
+          console.error(error);
+          if (error instanceof CustomError) throw error;
+          throw CustomError.internalServerError(
+            error instanceof Error ? error.message : String(error)
+          );
+        }
+      }
+
+    
     getStudentPagination = async () =>{
      try{
         const students = await prisma.students.count();
