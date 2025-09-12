@@ -16,6 +16,7 @@ enum filterConditionValues{
     MostCourses='Most Courses',
     LeastCourses = 'Least Courses'
 }
+
 export class StudentServices{
 
     constructor(
@@ -278,16 +279,8 @@ export class StudentServices{
       }
     }
 
-    public getStudentProgress = async(id:number) =>{
-      /*
-        1 - refactor the code get student progress
-        2 - also the course service functions
-        3 - to see how to not filter renacer mujeres/hombres based on the gender(done)
-      */
-        try{
-          const totalCourses = await CourseServices.getTotalCourse();
-          const totalCoursesTaken = await prisma.studentCourse.count(({where:{student_id:id}}));
-          const coursesByLevel = await CourseServices.getCoursesByLevel();
+    private getStudentCourses = async(id:number) =>{
+       try{
           const studentCourses = await prisma.studentCourse.findMany({
               where: {
                 student_id: id,
@@ -306,51 +299,88 @@ export class StudentServices{
                  }
               },
               
-            });
+            })
+            return studentCourses;
+       }
+       catch(error){
+        console.log(error)
+        throw CustomError.internalServerError(error as string)
+       }
+    }
 
-          const studentGender = studentCourses[0].student.gender;
-          const filterCourseLevel = studentGender === 'M' ? 'Renacer Mujeres' : 'Renacer Hombres'
+    private getStudentCoursesCount = async(id:number) =>{
+       try{
+          const studentCourses = await prisma.studentCourse.count(({where:{student_id:id}}))
+          return studentCourses;
+       }
+       catch(error){
+        console.log(error)
+        throw CustomError.internalServerError(error as string)
+       }
+    }
+
+    private getCoursesCompletedByLevel = (studentCourses:any []) =>{
       
-          const completedByLevel = Object.entries(
+      const completedByLevel = Object.entries(
               studentCourses.reduce((acc, sc) => {
                 const level = Util.formatCourseLevel(sc.course.level);
                 acc[level] = (acc[level] || 0) + 1;
                 return acc;
               }, {} as Record<string, number>)
             ).map(([level, count]) => ({ level, count }));
-
-           const coursesTakenByLevel = coursesByLevel.map((element,index)=>{
-
-             if(completedByLevel.length >=index + 1){
-             if(element.level === completedByLevel[index].level){
-               return{
-                level: element.level,
-                courseLevelQuantity: element.courseLevelQuantity,
-                coursesCompleted:completedByLevel[index].count
-               }
-             }
-            }
-            return{
-               level: element.level,
-                courseLevelQuantity: element.courseLevelQuantity,
-                coursesCompleted:0
-            }
-                
-           })
-           
-           const filterCoursesTakenByLevel = coursesTakenByLevel.filter((item)=> item.level !==filterCourseLevel);
-           
-          return {
-            totalCourses:totalCourses,
-            totalCoursesTaken:totalCoursesTaken,
-            coursesTakenByLevel:filterCoursesTakenByLevel
-          }
-          }
-          catch(error){
-            console.log(error);
-           throw CustomError.internalServerError(error as string);
-          } 
+        
+            return completedByLevel;
     }
+
+    public async getStudentProgress(id: number) {
+      try {
+        const [totalCourses, totalCoursesTaken, coursesByLevel, studentCourses] =
+          await Promise.all([
+            CourseServices.getTotalCourse(),
+            this.getStudentCoursesCount(id),
+            CourseServices.getCoursesByLevel(),
+            this.getStudentCourses(id),
+          ]);
+
+          if (!studentCourses.length) {
+            throw CustomError.notFound(`No courses found for student with id ${id}`);
+          }
+
+          const studentGender = studentCourses[0].student.gender;
+          const excludedLevel =
+            studentGender === "M" ? "Renacer Mujeres" : "Renacer Hombres";
+
+          const completedByLevel = this.getCoursesCompletedByLevel(studentCourses);
+
+          // Create a map for quick lookup of completed counts by level
+          const completedMap = new Map(
+            completedByLevel.map((c) => [c.level, c.count])
+          );
+
+          const coursesTakenByLevel = coursesByLevel.map((c) => ({
+            level: c.level,
+            courseLevelQuantity: c.courseLevelQuantity,
+            coursesCompleted: completedMap.get(c.level) ?? 0,
+          }));
+
+          const filteredCoursesTakenByLevel = coursesTakenByLevel.filter(
+            (c) => c.level !== excludedLevel
+          );
+
+          return {
+            totalCourses,
+            totalCoursesTaken,
+            coursesTakenByLevel: filteredCoursesTakenByLevel,
+          };
+        } catch (error) {
+          console.error(error);
+          if (error instanceof CustomError) throw error;
+          throw CustomError.internalServerError(
+            error instanceof Error ? error.message : String(error)
+          );
+        }
+      }
+
     
     getStudentPagination = async () =>{
      try{
