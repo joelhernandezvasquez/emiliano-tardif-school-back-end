@@ -3,7 +3,8 @@ import { prisma } from "../../data/postgres";
 import { Prisma } from "@prisma/client";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Student, StudentQueryParams, StudentsSummary } from "../interfaces/student.interface";
-import { count } from "console";
+import { CourseServices } from "./course.service";
+import { Util } from "../../config/util";
 
 enum filterConditionValues{
     Active = 'Active',
@@ -16,7 +17,10 @@ enum filterConditionValues{
     LeastCourses = 'Least Courses'
 }
 export class StudentServices{
-    constructor(){}
+
+    constructor(
+      private courseService:CourseServices
+    ){}
 
     private checkIfStudentExist = async (student:Student):Promise<Boolean>=>{
       try{
@@ -155,7 +159,6 @@ export class StudentServices{
          where:{id:studentId}
         })
       
-
         return {
          success:true,
          message:'Student has been updated',
@@ -274,6 +277,81 @@ export class StudentServices{
          throw CustomError.internalServerError('Internal Server Error');
       }
     }
+
+    public getStudentProgress = async(id:number) =>{
+      /*
+        1 - refactor the code get student progress
+        2 - also the course service functions
+        3 - to see how to not filter renacer mujeres/hombres based on the gender(done)
+      */
+        try{
+          const totalCourses = await CourseServices.getTotalCourse();
+          const totalCoursesTaken = await prisma.studentCourse.count(({where:{student_id:id}}));
+          const coursesByLevel = await CourseServices.getCoursesByLevel();
+          const studentCourses = await prisma.studentCourse.findMany({
+              where: {
+                student_id: id,
+              },
+              select: {
+                course: {
+                  select: {
+                    level: true,
+                    name:true,
+                  },
+                },
+                 student:{
+                   select:{
+                    gender:true
+                   }
+                 }
+              },
+              
+            });
+
+          const studentGender = studentCourses[0].student.gender;
+          const filterCourseLevel = studentGender === 'M' ? 'Renacer Mujeres' : 'Renacer Hombres'
+      
+          const completedByLevel = Object.entries(
+              studentCourses.reduce((acc, sc) => {
+                const level = Util.formatCourseLevel(sc.course.level);
+                acc[level] = (acc[level] || 0) + 1;
+                return acc;
+              }, {} as Record<string, number>)
+            ).map(([level, count]) => ({ level, count }));
+
+           const coursesTakenByLevel = coursesByLevel.map((element,index)=>{
+
+             if(completedByLevel.length >=index + 1){
+             if(element.level === completedByLevel[index].level){
+               return{
+                level: element.level,
+                courseLevelQuantity: element.courseLevelQuantity,
+                coursesCompleted:completedByLevel[index].count
+               }
+             }
+            }
+            return{
+               level: element.level,
+                courseLevelQuantity: element.courseLevelQuantity,
+                coursesCompleted:0
+            }
+                
+           })
+           
+           const filterCoursesTakenByLevel = coursesTakenByLevel.filter((item)=> item.level !==filterCourseLevel);
+           
+          return {
+            totalCourses:totalCourses,
+            totalCoursesTaken:totalCoursesTaken,
+            coursesTakenByLevel:filterCoursesTakenByLevel
+          }
+          }
+          catch(error){
+            console.log(error);
+           throw CustomError.internalServerError(error as string);
+          } 
+    }
+    
     getStudentPagination = async () =>{
      try{
         const students = await prisma.students.count();

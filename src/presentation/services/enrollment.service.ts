@@ -1,11 +1,13 @@
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Enrollment, EnrollmentUpdate } from "../interfaces/enrollment.interface";
+import { CourseServices } from "./course.service";
 import { EventService } from "./event.service";
 import { StudentServices } from "./student.service";
 
 export class EnrollmentService{
-    studentService = new StudentServices();
+    courseService = new CourseServices();
+    studentService = new StudentServices(this.courseService);
     eventService = new EventService();
 
     constructor(){

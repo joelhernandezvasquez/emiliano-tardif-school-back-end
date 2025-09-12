@@ -6,11 +6,13 @@ import { StudentServices } from "../services/student.service";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { EnrollmentService } from "../services/enrollment.service";
 import { EnrollmentController } from "../enrollments/controller";
+import { CourseServices } from "../services/course.service";
 export class StudentsRoutes {
     
     static get routes(): Router{
        const router = Router();
-       const studentService = new StudentServices();
+       const courseService = new CourseServices();
+       const studentService = new StudentServices(courseService);
        const controller = new StudentController(studentService);
        const enrollmentService = new EnrollmentService();
        const enrollmentController = new EnrollmentController(enrollmentService);
@@ -43,6 +45,7 @@ export class StudentsRoutes {
    
       router.get('/:id/enrollments',[AuthMiddleware.validateJWT],enrollmentController.getStudentEnrollmentHistory);
 
+      router.get('/:id/progress',[AuthMiddleware.validateJWT],controller.getStudentProgress)
   
     
        return router;
