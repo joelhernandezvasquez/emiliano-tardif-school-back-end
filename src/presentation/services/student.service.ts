@@ -19,9 +19,7 @@ enum filterConditionValues{
 
 export class StudentServices{
 
-    constructor(
-      private courseService:CourseServices
-    ){}
+    constructor(){}
 
     private checkIfStudentExist = async (student:Student):Promise<Boolean>=>{
       try{
@@ -373,6 +371,38 @@ export class StudentServices{
             coursesTakenByLevel: filteredCoursesTakenByLevel,
           };
         } catch (error) {
+          console.error(error);
+          if (error instanceof CustomError) throw error;
+          throw CustomError.internalServerError(
+            error instanceof Error ? error.message : String(error)
+          );
+        }
+      }
+
+      public async getPendingCoursesList(id:number){
+        try{
+          const courseIdsCompleted = await prisma.studentCourse.findMany(({
+            where:{student_id:id},
+            select:{
+              course_id:true
+            }
+          }))
+         const completedIds = courseIdsCompleted.map((c)=> c.course_id);
+        
+          const pendingCourses = await prisma.courses.findMany(({
+            where:{
+              id:{notIn:completedIds}
+            },
+            select:{
+              name:true,
+              description:true,
+              level:true
+            }
+          }))
+          
+          return pendingCourses;
+        }
+        catch (error) {
           console.error(error);
           if (error instanceof CustomError) throw error;
           throw CustomError.internalServerError(
