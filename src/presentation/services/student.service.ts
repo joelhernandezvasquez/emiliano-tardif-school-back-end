@@ -19,9 +19,7 @@ enum filterConditionValues{
 
 export class StudentServices{
 
-    constructor(
-      private courseService:CourseServices
-    ){}
+    constructor(){}
 
     private checkIfStudentExist = async (student:Student):Promise<Boolean>=>{
       try{
@@ -381,7 +379,48 @@ export class StudentServices{
         }
       }
 
+      public async getPendingCoursesList(id:number){
+        try{
+          const courseIdsCompleted = await prisma.studentCourse.findMany(({
+            where:{student_id:id},
+            select:{
+              course_id:true,
+
+              student:{
+                select:{
+                  gender:true
+                }
+              }
+            },
+          }))
+
+         const completedIds = courseIdsCompleted.map((c)=> c.course_id);
+         const excludedLevelGender = courseIdsCompleted[0].student.gender === 'M' ? 'RENACER_MUJERES':'RENACER_HOMBRE';
     
+          const pendingCourses = await prisma.courses.findMany(({
+            where:{
+              id:{notIn:completedIds}
+            },
+            select:{
+              name:true,
+              description:true,
+              level:true
+            }
+          }))
+
+          const filterPendingCourses = pendingCourses.filter((course)=> course.level!==excludedLevelGender);
+          
+          return filterPendingCourses;
+        }
+        catch (error) {
+          console.error(error);
+          if (error instanceof CustomError) throw error;
+          throw CustomError.internalServerError(
+            error instanceof Error ? error.message : String(error)
+          );
+        }
+      }
+
     getStudentPagination = async () =>{
      try{
         const students = await prisma.students.count();
