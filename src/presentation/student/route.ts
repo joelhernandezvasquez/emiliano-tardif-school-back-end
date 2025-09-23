@@ -6,7 +6,6 @@ import { StudentServices } from "../services/student.service";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { EnrollmentService } from "../services/enrollment.service";
 import { EnrollmentController } from "../enrollments/controller";
-import { CourseServices } from "../services/course.service";
 export class StudentsRoutes {
     
     static get routes(): Router{

@@ -384,11 +384,19 @@ export class StudentServices{
           const courseIdsCompleted = await prisma.studentCourse.findMany(({
             where:{student_id:id},
             select:{
-              course_id:true
-            }
+              course_id:true,
+
+              student:{
+                select:{
+                  gender:true
+                }
+              }
+            },
           }))
+
          const completedIds = courseIdsCompleted.map((c)=> c.course_id);
-        
+         const excludedLevelGender = courseIdsCompleted[0].student.gender === 'M' ? 'RENACER_MUJERES':'RENACER_HOMBRE';
+    
           const pendingCourses = await prisma.courses.findMany(({
             where:{
               id:{notIn:completedIds}
@@ -399,8 +407,10 @@ export class StudentServices{
               level:true
             }
           }))
+
+          const filterPendingCourses = pendingCourses.filter((course)=> course.level!==excludedLevelGender);
           
-          return pendingCourses;
+          return filterPendingCourses;
         }
         catch (error) {
           console.error(error);
@@ -411,7 +421,6 @@ export class StudentServices{
         }
       }
 
-    
     getStudentPagination = async () =>{
      try{
         const students = await prisma.students.count();

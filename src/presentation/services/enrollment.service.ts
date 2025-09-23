@@ -7,7 +7,7 @@ import { StudentServices } from "./student.service";
 
 export class EnrollmentService{
     courseService = new CourseServices();
-    studentService = new StudentServices(this.courseService);
+    studentService = new StudentServices();
     eventService = new EventService();
 
     constructor(){
