@@ -404,7 +404,7 @@ export class StudentServices{
             select:{
               name:true,
               description:true,
-              level:true
+              level:true,
             }
           }))
 
@@ -419,6 +419,38 @@ export class StudentServices{
             error instanceof Error ? error.message : String(error)
           );
         }
+      }
+
+      public getEnrollCourseList = async(id:number) =>{
+         try{
+            const courseList = await prisma.studentCourse.findMany(({
+              where:{student_id:id},
+              select:{
+                completedAt:true,
+                course:{
+                 select:{
+                  name:true,
+                  description:true,
+                  level:true
+                 }
+                }
+              }
+            }))
+
+            const courseListFormatted = courseList.map((element)=>{
+              return{
+                name:element.course.name,
+                description:element.course.description,
+                level:element.course.level,
+                completeAt:element.completedAt
+              }
+            })
+
+          return courseListFormatted;
+         }
+         catch(error){
+           console.log(error);
+         }
       }
 
     getStudentPagination = async () =>{

@@ -47,6 +47,8 @@ export class StudentsRoutes {
      
       router.get('/:id/pending-courses',[AuthMiddleware.validateJWT],controller.getPendingCoursesList);
     
-       return router;
+      router.get('/:id/complete-courses',[AuthMiddleware.validateJWT],controller.getEnrollCourseList);
+       
+      return router;
     }
 }

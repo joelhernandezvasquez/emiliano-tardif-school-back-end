@@ -109,6 +109,11 @@ export class StudentController{
       this.studentService.getPendingCoursesList(+id)
       .then((list)=> res.json(list))
       .catch((error)=> this.handleError(error,res))
-
+    }
+    getEnrollCourseList =(req:Request,res:Response) =>{
+      const {id} = req.params;
+      this.studentService.getEnrollCourseList(+id)
+      .then((list)=> res.json(list))
+      .catch((error)=> this.handleError(error,res))
     }
 }

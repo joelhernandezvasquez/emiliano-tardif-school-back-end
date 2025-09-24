@@ -96,6 +96,7 @@ model Enrollments {
 model StudentCourse{
   student_id Int
   course_id Int
+  completedAt DateTime?
 
   student   Students @relation(fields: [student_id], references: [id])
   course    Courses  @relation(fields: [course_id], references: [id])
