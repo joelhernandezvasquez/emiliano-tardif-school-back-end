@@ -330,6 +330,13 @@ export class StudentServices{
             return completedByLevel;
     }
 
+    private getStudentGender = async (studentId:number) =>{ 
+      return await prisma.students.findUnique({
+             where: { id: studentId },
+             select: { gender: true }
+           });
+    }
+
     public async getStudentProgress(id: number) {
       try {
         const [totalCourses, totalCoursesTaken, coursesByLevel, studentCourses] =
@@ -380,45 +387,37 @@ export class StudentServices{
       }
 
       public async getPendingCoursesList(id:number){
-        try{
-          const courseIdsCompleted = await prisma.studentCourse.findMany(({
-            where:{student_id:id},
-            select:{
-              course_id:true,
+        try {
+            const genderResult = await this.getStudentGender(id);
+            const excludedLevelGender = genderResult?.gender === 'M' ? 'RENACER_MUJERES' : 'RENACER_HOMBRE';
 
-              student:{
-                select:{
-                  gender:true
-                }
-              }
-            },
-          }))
+            const courseIdsCompleted = await prisma.studentCourse.findMany({
+              where: { student_id: id },
+              select: { course_id: true },
+            });
+            const completedIds = courseIdsCompleted.map((c) => c.course_id);
 
-         const completedIds = courseIdsCompleted.map((c)=> c.course_id);
-         const excludedLevelGender = courseIdsCompleted[0].student.gender === 'M' ? 'RENACER_MUJERES':'RENACER_HOMBRE';
-    
-          const pendingCourses = await prisma.courses.findMany(({
-            where:{
-              id:{notIn:completedIds}
-            },
-            select:{
-              name:true,
-              description:true,
-              level:true,
-            }
-          }))
+            const pendingCourses = await prisma.courses.findMany({
+              where: {
+                id: { notIn: completedIds },
+                level: { not: excludedLevelGender },
+              },
+              select: {
+                name: true,
+                description: true,
+                level: true,
+              },
+            });
 
-          const filterPendingCourses = pendingCourses.filter((course)=> course.level!==excludedLevelGender);
-          
-          return filterPendingCourses;
-        }
-        catch (error) {
-          console.error(error);
-          if (error instanceof CustomError) throw error;
-          throw CustomError.internalServerError(
-            error instanceof Error ? error.message : String(error)
-          );
-        }
+            return pendingCourses;
+
+          } catch (error) {
+            console.error(error);
+            if (error instanceof CustomError) throw error;
+            throw CustomError.internalServerError(
+              error instanceof Error ? error.message : String(error)
+            );
+          }
       }
 
       public getEnrollCourseList = async(id:number) =>{
