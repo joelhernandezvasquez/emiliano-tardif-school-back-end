@@ -2,6 +2,7 @@ import { Request,Response } from "express";
 import { StudentServices } from "../services/student.service";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Student } from "../interfaces/student.interface";
+import { StudentCourse } from "../interfaces/studentCourse.interface";
 
 export class StudentController{
 
@@ -31,6 +32,15 @@ export class StudentController{
      this.studentService.createStudent(studentData)
      .then((student) => res.json(student))
      .catch(error => this.handleError(error,res))
+    }
+
+    addManualStudentCourses = (req:Request,res:Response)=>{
+     const{id} = req.params;
+     const courses:StudentCourse [] = req.body.courses;
+
+      this.studentService.addManualStudentCourses(+id,courses)
+      .then((student)=> res.json(student))
+      .catch((error)=> this.handleError(error,res))
     }
 
     getAllStudents = (req:Request,res:Response) =>{

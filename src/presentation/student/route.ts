@@ -27,7 +27,16 @@ export class StudentsRoutes {
         [AuthMiddleware.validateJWT],
         controller.createStudent
       );
-      router.get('/summary',[AuthMiddleware.validateJWT],controller.getSummary);
+
+       router.post('/:id/courses/manual-add',
+        [
+         check('courses').isArray({min:1}).withMessage("Courses cannot be empty")
+        ],
+        FieldValidatorMiddleware.fieldValidator,
+        [AuthMiddleware.validateJWT],
+        controller.addManualStudentCourses)
+      
+       router.get('/summary',[AuthMiddleware.validateJWT],controller.getSummary);
       
       router.get('/students',[AuthMiddleware.validateJWT],controller.getAllStudents);
       
@@ -48,7 +57,9 @@ export class StudentsRoutes {
       router.get('/:id/pending-courses',[AuthMiddleware.validateJWT],controller.getPendingCoursesList);
     
       router.get('/:id/complete-courses',[AuthMiddleware.validateJWT],controller.getEnrollCourseList);
-       
+      
+     
+
       return router;
     }
 }

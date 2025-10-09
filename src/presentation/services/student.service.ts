@@ -5,6 +5,7 @@ import { CustomError } from "../../domain/errors/custom.error";
 import { Student, StudentQueryParams, StudentsSummary } from "../interfaces/student.interface";
 import { CourseServices } from "./course.service";
 import { Util } from "../../config/util";
+import { StudentCourse } from "../interfaces/studentCourse.interface";
 
 enum filterConditionValues{
     Active = 'Active',
@@ -468,4 +469,45 @@ export class StudentServices{
       throw CustomError.internalServerError('Internal Server Error');
      }
     }
+
+     addManualStudentCourses = async(studentId:number,courses:StudentCourse[]) =>{
+      try{
+        const studentExist = await this.checkStudentById(studentId);
+
+        if(!studentExist){
+          throw CustomError.notFound(`Student not found`);
+        }
+        const currentCourseIds = (await CourseServices.getCourseIds()).map((course)=> course.id);
+        const completedStudentCoursesId = courses.map((course)=> course.course_id);
+        
+        const areCourseIdValid = completedStudentCoursesId.every((id)=> currentCourseIds.includes(id));
+       
+        if(!areCourseIdValid){
+          throw CustomError.notFound(`Courses are invalid`);
+        }
+
+        const addCourses = await prisma.studentCourse.createMany({
+          data:courses.map((course)=> {
+            return{
+              student_id:studentId,
+              course_id:course.course_id,
+              completedAt:course?.completedAt ?? null
+            }
+          }),
+          skipDuplicates:true
+        })
+       
+        if(addCourses.count === courses.length){
+            return{
+             success:true,
+             message:'Courses were added succesfully'
+          }
+        }
+      }
+     catch(error){
+      console.log(error);
+      throw CustomError.internalServerError('Internal Server Error');
+     }
+      
+     }
 }
