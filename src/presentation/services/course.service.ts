@@ -159,6 +159,14 @@ export class CourseServices{
       }
     }
 
+    public static getCourseIds = async() =>{
+        const courseIds = await prisma.courses.findMany(({
+            select:{ id:true}
+          }))
+
+          return courseIds;
+    }
+
 }
 
 
