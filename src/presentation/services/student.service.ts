@@ -404,6 +404,7 @@ export class StudentServices{
                 level: { not: excludedLevelGender },
               },
               select: {
+                id:true,
                 name: true,
                 description: true,
                 level: true,
