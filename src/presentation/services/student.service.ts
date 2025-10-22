@@ -208,11 +208,11 @@ export class StudentServices{
     private getOrderClause = (sortBy:string) =>{
 
          if (sortBy === filterConditionValues.MostCourses) {
-             return [{ Enrollments: { _count: 'desc' } }];
+             return [{ StudentCourses: { _count: 'desc' } }];
             } 
             
          if(sortBy === filterConditionValues.LeastCourses) {
-            return [{ Enrollments: { _count: 'asc' } }];
+            return [{ StudentCourses: { _count: 'asc' } }];
 
           } 
         return this.getSortedStudent(sortBy);
@@ -241,7 +241,7 @@ export class StudentServices{
           active:true,
           created_at:true,
           _count:{
-            select:{Enrollments:true}
+            select:{StudentCourses:true}
           }
         },
          where: {
