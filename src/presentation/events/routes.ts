@@ -15,6 +15,8 @@ export class EventRoutes{
    const controller = new EventController(eventService);
    const enrollmentController = new EnrollmentController(enrollmentService);
 
+  router.get('/summary',[AuthMiddleware.validateJWT],controller.getEventSummary)
+
    router.post('/create',
     [
      check('name').notEmpty().withMessage("Name of the event is required."),
@@ -41,6 +43,7 @@ export class EventRoutes{
     controller.getEvent
    )
 
+
    router.put('/:id',
     [
      check('name').notEmpty().withMessage("Name of the event is required."),
@@ -57,6 +60,7 @@ export class EventRoutes{
    )
 
    router.get('/:eventId/enrollments',[AuthMiddleware.validateJWT],enrollmentController.getEnrollmentsForEvent)
+   
    
   
    
