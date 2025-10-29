@@ -61,4 +61,10 @@ export class EventController {
     .then((event)=> res.json(event))
     .catch((error)=> this.handleError(error,res))
   }
+
+  public getEventSummary = async(req:Request,res:Response) =>{
+    this.eventService.getEventSummary()
+    .then((event)=> res.json(event))
+    .catch((error)=> this.handleError(error,res))
+  }
 }

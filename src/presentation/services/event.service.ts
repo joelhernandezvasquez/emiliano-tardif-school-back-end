@@ -159,4 +159,25 @@ export class EventService{
        throw CustomError.internalServerError('Internal server error');
       }
     }
+
+    public getEventSummary = async() =>{
+      
+    try{
+
+     const [total,upcoming,completed] = await Promise.all([
+          prisma.events.count(),
+          prisma.events.count({ where: { status: 'upcoming' } }),
+          prisma.events.count({where:{status:'completed'}})
+        ])
+          return {total,upcoming,completed};
+      }
+     catch(error){
+      if(error instanceof Error){
+       throw CustomError.internalServerError(error.message)
+      }
+       throw CustomError.internalServerError('Internal server error');
+      }
+      
+    
+    }
 }
