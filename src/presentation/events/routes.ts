@@ -17,6 +17,8 @@ export class EventRoutes{
 
   router.get('/summary',[AuthMiddleware.validateJWT],controller.getEventSummary)
 
+  router.get('/search',[AuthMiddleware.validateJWT],controller.searchEvents);
+
    router.post('/create',
     [
      check('name').notEmpty().withMessage("Name of the event is required."),
@@ -61,8 +63,6 @@ export class EventRoutes{
 
    router.get('/:eventId/enrollments',[AuthMiddleware.validateJWT],enrollmentController.getEnrollmentsForEvent)
    
-   
-  
    
    return router;
   }

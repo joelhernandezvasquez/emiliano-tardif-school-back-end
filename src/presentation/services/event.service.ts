@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
-import { Event } from "../interfaces/event.interface";
+import { Event, EventQueryParams } from "../interfaces/event.interface";
 import { CourseServices } from "./course.service";
 
 export class EventService{
@@ -176,8 +176,68 @@ export class EventService{
        throw CustomError.internalServerError(error.message)
       }
        throw CustomError.internalServerError('Internal server error');
+      }  
+    }
+
+    private getEventFilterCondition = (query:string) =>{
+          const allowedStatuses = ['upcoming', 'completed', 'cancelled', 'ongoing'] as const;
+          let filterCondition: any;
+
+        if (query && query !== 'all') {
+          if (allowedStatuses.includes(query as any)) {
+            filterCondition = { status: query };
+          } 
+          else {
+            filterCondition = {
+              OR: [
+                { name: { contains: query, mode: 'insensitive' } },
+                { price: { contains: query, mode: 'insensitive' } },
+                 { status: { contains: query, mode: 'insensitive' } },
+              ]
+            };
+          }
+        }
+        return filterCondition;
+    }
+
+    public searchEvents = async(eventQueryParams:EventQueryParams) =>{
+      const {query,page} =eventQueryParams;
+      const queryLower = query.toLocaleLowerCase();
+
+      try{
+        const ITEMS_PER_PAGE = 9;
+        const skip = (page -1) * ITEMS_PER_PAGE;
+        const filterCondition = this.getEventFilterCondition(queryLower);
+  
+        const events = await prisma.events.findMany({
+          select:{
+           id:true,
+           name:true,
+           price:true,
+           start_date:true,
+           end_date:true,
+           status:true,
+
+           course:{
+            select:{
+              level:true
+            }
+           }
+          },
+          where: queryLower && queryLower !== 'all' ? filterCondition : undefined,
+          skip,
+          take: ITEMS_PER_PAGE,
+          orderBy: { start_date: 'asc' }
+        })
+        
+        return events;
       }
-      
-    
+      catch(error){
+        if(error instanceof Error){
+          throw CustomError.internalServerError(error.message)
+        }
+        throw CustomError.internalServerError('Internal server error');
+      }
+     
     }
 }

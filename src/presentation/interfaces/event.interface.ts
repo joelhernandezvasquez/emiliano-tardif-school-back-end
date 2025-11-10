@@ -9,3 +9,7 @@ export interface Event{
   location:string,
   status:EventStatus
 }
+export interface EventQueryParams{
+    query:string,
+    page:number
+}
