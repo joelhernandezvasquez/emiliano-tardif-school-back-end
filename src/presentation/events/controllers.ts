@@ -67,4 +67,18 @@ export class EventController {
     .then((event)=> res.json(event))
     .catch((error)=> this.handleError(error,res))
   }
+
+  public searchEvents = async(req:Request,res:Response) =>{
+    const {query, page} = req.query;
+    const queryParam = query === 'Active' ? 'ongoing':query;
+
+      const eventQueryParams = {
+        query: typeof queryParam=== 'string' ? queryParam : '',
+        page: +(page ?? 1),
+       }
+   
+    this.eventService.searchEvents(eventQueryParams)
+    .then((event)=> res.json(event))
+    .catch((error) => this.handleError(error,res))
+  }
 }
