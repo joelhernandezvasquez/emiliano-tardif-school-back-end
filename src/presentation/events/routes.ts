@@ -15,6 +15,8 @@ export class EventRoutes{
    const controller = new EventController(eventService);
    const enrollmentController = new EnrollmentController(enrollmentService);
 
+  router.get('/pagination',[AuthMiddleware.validateJWT],controller.getEventPagination);
+
   router.get('/summary',[AuthMiddleware.validateJWT],controller.getEventSummary)
 
   router.get('/search',[AuthMiddleware.validateJWT],controller.searchEvents);

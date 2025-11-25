@@ -1,4 +1,3 @@
-import { Response } from "express";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Event, EventQueryParams } from "../interfaces/event.interface";
@@ -227,7 +226,7 @@ export class EventService{
           where: queryLower && queryLower !== 'all' ? filterCondition : undefined,
           skip,
           take: ITEMS_PER_PAGE,
-          orderBy: { start_date: 'asc' }
+          orderBy: { start_date: 'desc' }
         })
         
         return events;
@@ -240,4 +239,22 @@ export class EventService{
       }
      
     }
+
+    getEventPagination = async () =>{
+     try{
+        const events = await prisma.events.count();
+        const ITEMS_PER_PAGE = 9;
+        const totalPages = Math.ceil(Number(events) / ITEMS_PER_PAGE);
+
+      return{
+        totalPages,
+        totalCount:events
+      }
+     }
+     catch(error){
+      console.log(error);
+      throw CustomError.internalServerError('Internal Server Error');
+     }
+    }
+
 }
