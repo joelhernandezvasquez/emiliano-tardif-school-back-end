@@ -17,7 +17,6 @@ export class EventController {
     
 
   public createEvent = (req:Request,res:Response) =>{
- 
     const eventData:Event = {
         name:req.body.name.trim(),
         course_id:req.body.course_id,
@@ -81,4 +80,9 @@ export class EventController {
     .then((event)=> res.json(event))
     .catch((error) => this.handleError(error,res))
   }
+  getEventPagination = (req:Request,res:Response) =>{
+      this.eventService.getEventPagination()
+      .then((events)=> res.json(events))
+      .catch((error)=> this.handleError(error,res))
+    }
 }

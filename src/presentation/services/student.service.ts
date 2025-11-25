@@ -462,7 +462,7 @@ export class StudentServices{
 
       return{
         totalPages,
-        totalStudents:students
+        totalCount:students
       }
      }
      catch(error){
