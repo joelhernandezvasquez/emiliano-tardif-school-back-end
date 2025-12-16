@@ -25,6 +25,23 @@ export class EventService{
     public getEventById = async(id:number) =>{
        try{
          const event = await prisma.events.findUnique(({
+          select:{
+           id:true,
+           name:true,
+           course_id:true,
+           price:true,
+           start_date:true,
+           end_date:true,
+           status:true,
+           location:true,
+           created_at:true,
+
+            course:{
+              select:{
+               name:true
+              }
+            }
+          },
           where:{id}
          }))
 
@@ -123,8 +140,6 @@ export class EventService{
           throw CustomError.notFound('Course does not exist!');
         }
          
-        
-
        const start_date = new Date(eventData.start_date);
        const end_date = new Date(eventData.end_date);
       
