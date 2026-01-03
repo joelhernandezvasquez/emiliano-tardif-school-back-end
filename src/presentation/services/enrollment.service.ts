@@ -235,7 +235,7 @@ export class EnrollmentService{
      }
     }
 
-       public searchStudent = async (query:string) => {
+       public searchStudent = async (query:string,eventId:number) => {
           
           try {
             const filterCondition = this.studentService.getFilterStudentCondition(query);
@@ -243,6 +243,9 @@ export class EnrollmentService{
             const studentsEnrolled = await prisma.enrollments.findMany({
               select:{
                 student_id:true
+              },
+              where:{
+                event_id:eventId
               }
             })
             

@@ -10,7 +10,7 @@ export class EnrollmentRoutes{
        const enrollmentService = new EnrollmentService();
        const controller = new EnrollmentController(enrollmentService);
       
-       router.get('/search',[AuthMiddleware.validateJWT],controller.searchStudent);
+       router.get('/search/:eventId',[AuthMiddleware.validateJWT],controller.searchStudent);
        
        router.post('/enroll',
         [
