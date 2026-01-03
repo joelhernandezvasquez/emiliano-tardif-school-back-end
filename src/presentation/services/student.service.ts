@@ -171,7 +171,7 @@ export class StudentServices{
       }
     }
 
-    private getFilterStudentCondition = (query:string) =>{
+  public  getFilterStudentCondition = (query:string) =>{
        const conditions:any[] = [
               { first_name: { contains: query, mode: 'insensitive' } },
               { last_name: { contains: query, mode: 'insensitive' } },
