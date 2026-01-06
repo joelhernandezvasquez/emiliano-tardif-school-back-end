@@ -1,13 +1,11 @@
-import { Attendance } from "@prisma/client";
+import {EnrollStatus} from "@prisma/client";
 
 export interface Enrollment{
   student_id:number,
   event_id:number,
-  notes?:string,
-  attendance : Attendance
+  status? : EnrollStatus
 }
 
 export interface EnrollmentUpdate{
-   notes?:string,
-  attendance : Attendance
+  status : EnrollStatus
 }

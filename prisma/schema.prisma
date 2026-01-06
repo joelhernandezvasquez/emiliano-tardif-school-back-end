@@ -29,10 +29,12 @@ enum EventStatus {
   cancelled
 }
 
-enum Attendance {
-  present
-  absent
+enum EnrollStatus {
+  registered
+  enrolled
+  noShow
   cancelled
+  completed
 }
 model Users{
   id    Int     @id @default(autoincrement())
@@ -87,8 +89,7 @@ model Enrollments {
   student_id  Int
   event_id    Int
   enrolled_at DateTime @default(now())
-  notes       String?
-  attendance  Attendance?
+  status       EnrollStatus @default(registered) 
   student     Students @relation(fields: [student_id], references: [id])
   event       Events   @relation(fields: [event_id], references: [id])
 }

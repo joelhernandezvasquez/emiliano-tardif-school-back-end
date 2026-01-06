@@ -10,11 +10,13 @@ export class EnrollmentRoutes{
        const enrollmentService = new EnrollmentService();
        const controller = new EnrollmentController(enrollmentService);
       
+       router.get('/search/:eventId',[AuthMiddleware.validateJWT],controller.searchStudent);
+       
        router.post('/enroll',
         [
              check('student_id').notEmpty().withMessage("Student ID is required."),
              check('event_id').notEmpty().withMessage('Event ID is required.'),
-             check('attendance').isIn(['present','absence','cancelled']).withMessage('attendance is invalid.')
+             check('status').isIn(['registered','enrolled','noShow','completed','cancelled']).withMessage('status is invalid.')
         ],
        [AuthMiddleware.validateJWT],
        controller.createEnrollment

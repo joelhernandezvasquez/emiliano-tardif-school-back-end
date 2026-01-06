@@ -18,9 +18,7 @@ export class EnrollmentController{
   public createEnrollment = (req:Request,res:Response) => {
    const enrollmentData = {
     student_id:req.body.student_id,
-    event_id:req.body.event_id,
-    notes:req.body.notes.trim(),
-    attendance: req.body.attendance.trim()
+    event_id:req.body.event_id
    }
    
    this.enrollmentService.createEnrollment(enrollmentData)
@@ -50,8 +48,7 @@ export class EnrollmentController{
 
   public updateEnrollment = (req:Request,res:Response) =>{
    const enrollmentData:EnrollmentUpdate = {
-    notes:req.body.notes.trim(),
-    attendance: req.body.attendance.trim()
+    status: req.body.status.trim()
    }
    const {enrollmentId} = req.params;
 
@@ -71,5 +68,15 @@ export class EnrollmentController{
    .then((result)=> res.json(result))
    .catch((error)=> this.handleError(error,res))
   }
+
+  public searchStudent = (req:Request,res:Response) =>{
+       const {query} = req.query;
+       const {eventId} = req.params;
+       const studentQuery = query?.toString() as string;
+
+       this.enrollmentService.searchStudent(studentQuery,+eventId)
+       .then((students)=> res.json(students))
+       .catch((error)=> this.handleError(error,res))
+   }
 
 }

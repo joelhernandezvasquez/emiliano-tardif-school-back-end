@@ -122,11 +122,13 @@ export class EnrollmentService{
           email: enroll.student.email,
           enrollmentDate: enroll.enrolled_at.toISOString(),
           courseTitle: enroll.event.course.name,
-          notes:enroll.notes
+          status:enroll.status
         }));
 
         return result;
+
       }
+      
 
       catch(error){
        if(error instanceof Error){
@@ -232,4 +234,40 @@ export class EnrollmentService{
              throw CustomError.internalServerError('Internal server error');
      }
     }
+
+       public searchStudent = async (query:string,eventId:number) => {
+          
+          try {
+            const filterCondition = this.studentService.getFilterStudentCondition(query);
+                
+            const studentsEnrolled = await prisma.enrollments.findMany({
+              select:{
+                student_id:true
+              },
+              where:{
+                event_id:eventId
+              }
+            })
+            
+            const enrolledStudentIds = studentsEnrolled.map(enrollment => enrollment.student_id);
+            
+            const students = await prisma.students.findMany({
+               select:{
+              id:true,
+              first_name:true,
+              last_name:true,
+              email:true,
+              phone:true,
+            },
+             where: {
+                OR:query!="All" ? filterCondition : undefined,
+                id: { notIn:enrolledStudentIds}
+              },
+             })
+             
+             return students;
+          } catch (error) {
+            throw CustomError.internalServerError('Internal Server Error');
+          }
+        }
 }
