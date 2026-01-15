@@ -243,8 +243,24 @@ export class EventService{
           take: ITEMS_PER_PAGE,
           orderBy: { start_date: 'desc' }
         })
+
+         const eventIds = events.map(e => e.id);
+        const enrollmentCounts = await prisma.enrollments.groupBy({
+          by: ['event_id'],
+          where: { event_id: { in: eventIds } },
+          _count: { event_id: true }
+        });
+
+          // Map counts to events
+        const eventsWithCounts = events.map(event => {
+          const countObj = enrollmentCounts.find(e => e.event_id === event.id);
+          return {
+            ...event,
+            enrollmentCount: countObj ? countObj._count.event_id : 0
+          };
+        });
         
-        return events;
+         return eventsWithCounts;
       }
       catch(error){
         if(error instanceof Error){

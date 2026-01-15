@@ -169,7 +169,7 @@ export class EnrollmentService{
          const enrollmentExist = await this.checkEnrollmentById(enrollmentId);
 
          if(!enrollmentExist){
-          throw CustomError.notFound('Enrollment does not exist');
+           throw CustomError.notFound('Enrollment does not exist');
          }
 
         const updatedEnrollment  = await prisma.enrollments.update({
