@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { EventService } from "../services/event.service";
 import { Event } from "../interfaces/event.interface";
 import { CustomError } from "../../domain/errors/custom.error";
+import { error } from "console";
 
 export class EventController {
     constructor(public readonly eventService:EventService){}
@@ -83,6 +84,13 @@ export class EventController {
   getEventPagination = (req:Request,res:Response) =>{
       this.eventService.getEventPagination()
       .then((events)=> res.json(events))
+      .catch((error)=> this.handleError(error,res))
+    }
+
+    completeEvent = (req:Request,res:Response) =>{
+      const {id} = req.params;
+      this.eventService.completeEvent(+id)
+      .then((event)=> res.json(event))
       .catch((error)=> this.handleError(error,res))
     }
 }

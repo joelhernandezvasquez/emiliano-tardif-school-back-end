@@ -37,6 +37,8 @@ export class EventRoutes{
     controller.createEvent
 )
 
+  router.post('/:id/complete',[AuthMiddleware.validateJWT],controller.completeEvent)
+
    router.get('/list',
     [AuthMiddleware.validateJWT],
     controller.getEvents

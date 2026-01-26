@@ -1,3 +1,4 @@
+import { EventStatus } from "@prisma/client";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Event, EventQueryParams } from "../interfaces/event.interface";
@@ -285,6 +286,78 @@ export class EventService{
      catch(error){
       console.log(error);
       throw CustomError.internalServerError('Internal Server Error');
+     }
+    }
+
+    completeEvent = async(eventId:number) =>{
+      try{
+          const event = await this.getEventById(eventId);
+         
+         if(!event){
+          throw CustomError.notFound("Event not found!");
+         }
+
+        const course = await CourseServices.checkCourseById(event.course_id);
+          if(!course){
+            throw CustomError.notFound('Course does not exist!');
+          }
+
+          // First Action update the event to complete
+          const completedEvent = {
+            id: event.id,
+            name: event.name,
+            course_id: event.course_id,
+            price: event.price,
+            start_date: event.start_date,
+            end_date: event.end_date,
+            location: event.location,
+            status:EventStatus.completed
+          }
+
+
+       const updatedEvent = await prisma.events.update(({
+        where:{id:eventId},
+        data:completedEvent
+       }))
+
+
+       // Second Action will be to update the table enrollment based on the students
+
+       const enrollmentUpdate = await prisma.enrollments.updateMany(({
+        where:{event_id:eventId,status:'enrolled'},
+        data:{status:EventStatus.completed}
+       }))
+
+       // Third Action will be to add to student course
+
+       const studentsEnrolled = await prisma.enrollments.findMany(({
+         where:{event_id:eventId,status:'completed'},
+         select:{
+          student_id:true
+         }
+       }))
+       
+       const completeDate = new Date();
+
+       const studentsCourseAdded = await prisma.studentCourse.createMany({
+        data: studentsEnrolled.map(student => ({
+            student_id: student.student_id,
+            course_id: event.course_id,
+            completedAt:completeDate.toISOString()
+          })),
+           skipDuplicates:true
+       })
+           if(!studentsCourseAdded){
+             throw CustomError.notFound('Students Enrollment Failed');
+           }
+           return {
+             success:true,
+             message:'Event has been completed'
+           }
+      }
+       catch(error){
+        console.log(error);
+        throw CustomError.internalServerError('Internal Server Error');
      }
     }
 
