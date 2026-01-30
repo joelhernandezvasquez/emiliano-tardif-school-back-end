@@ -220,6 +220,7 @@ export class EventService{
       const queryLower = query.toLocaleLowerCase();
 
       try{
+        //TODO:CODE DUPLICATED HERE AND ALSO IN GET EVENT PAGINATION PLAEASE AVOID DUPLICATION
         const ITEMS_PER_PAGE = 9;
         const skip = (page -1) * ITEMS_PER_PAGE;
         const filterCondition = this.getEventFilterCondition(queryLower);
@@ -245,7 +246,7 @@ export class EventService{
           orderBy: { start_date: 'desc' }
         })
 
-         const eventIds = events.map(e => e.id);
+        const eventIds = events.map(e => e.id);
         const enrollmentCounts = await prisma.enrollments.groupBy({
           by: ['event_id'],
           where: { event_id: { in: eventIds } },
@@ -272,15 +273,22 @@ export class EventService{
      
     }
 
-    getEventPagination = async () =>{
+    getEventPagination = async (eventQueryParams:EventQueryParams) =>{
      try{
-        const events = await prisma.events.count();
+        const {query,page} =eventQueryParams;
+        const queryLower = query.toLocaleLowerCase();
+        const filterCondition = this.getEventFilterCondition(queryLower);
         const ITEMS_PER_PAGE = 9;
-        const totalPages = Math.ceil(Number(events) / ITEMS_PER_PAGE);
+
+        const events = await prisma.events.findMany({
+          where: queryLower && queryLower !== 'all' ? filterCondition : undefined,
+        })
+
+        const totalPages = Math.ceil(Number(events.length) / ITEMS_PER_PAGE);
 
       return{
         totalPages,
-        totalCount:events
+        totalCount:events.length
       }
      }
      catch(error){
