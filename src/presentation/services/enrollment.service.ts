@@ -270,4 +270,15 @@ export class EnrollmentService{
             throw CustomError.internalServerError('Internal Server Error');
           }
         }
+
+        public getAllEnrollments = async() =>{
+           try{
+              const totalEnrollments = await prisma.enrollments.count();
+
+              return totalEnrollments;
+           }
+           catch (error) {
+            throw CustomError.internalServerError('Internal Server Error');
+          }
+        }
 }
