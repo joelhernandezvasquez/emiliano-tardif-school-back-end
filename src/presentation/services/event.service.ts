@@ -369,4 +369,21 @@ export class EventService{
      }
     }
 
+    public getUpcomingEvents = async() =>{
+      try{
+         const upcomingEvents = await prisma.events.findMany(({
+          where:{status:'upcoming'},
+          orderBy:{end_date:'asc'}
+         }))
+
+         return upcomingEvents;
+      }
+
+       catch(error){
+        console.log(error);
+        throw CustomError.internalServerError('Internal Server Error');
+     }
+
+    }
+
 }

@@ -24,5 +24,11 @@ export class DashboardController{
       .catch((error)=> this.handleError(error,res))
     }
 
+    getEventsSummary = (req:Request,res:Response) =>{
+      this.dashboardService.getDashboardEventsSummary()
+      .then((summary)=> res.json(summary))
+      .catch((error)=> this.handleError(error,res))
+    }
+
     
 }

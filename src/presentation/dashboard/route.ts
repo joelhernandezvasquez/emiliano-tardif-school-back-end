@@ -19,7 +19,7 @@ export class DashboardRoutes {
        const controller = new DashboardController(dashboardService);
     
       router.get('/summary',[AuthMiddleware.validateJWT],controller.getSummary);
-     
+      router.get('/events/summary',[AuthMiddleware.validateJWT],controller.getEventsSummary)
 
       return router;
     }
