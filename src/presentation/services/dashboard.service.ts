@@ -75,4 +75,21 @@ export class DashboardServices{
          throw CustomError.internalServerError('Internal Server Error');
       }
     }
+
+    getDashboardStudentRisk = async() =>{
+        try{
+          const [studentsNoCourse,studentsPastEnrollment] =
+          await Promise.all([this.studentServices.getAllStudentsWithNoCourses(),this.studentServices.getAllStudentsWithPastSixMonthOfEnrollment()])
+        
+          
+          return {
+            studentsNoCourse:studentsNoCourse,
+            studentsPastEnrollment
+          }
+        }
+        catch(error){
+          console.log(error);
+          throw CustomError.internalServerError('Internal Server Error');
+        }
+    }
 }

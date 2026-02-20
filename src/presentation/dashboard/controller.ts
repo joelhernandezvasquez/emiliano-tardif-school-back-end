@@ -30,5 +30,11 @@ export class DashboardController{
       .catch((error)=> this.handleError(error,res))
     }
 
+    getStudentsAtRisk = (req:Request,res:Response) =>{
+       this.dashboardService.getDashboardStudentRisk()
+      .then((students)=> res.json(students))
+      .catch((error)=> this.handleError(error,res))
+    }
+
     
 }

@@ -20,7 +20,7 @@ export class DashboardRoutes {
     
       router.get('/summary',[AuthMiddleware.validateJWT],controller.getSummary);
       router.get('/events/summary',[AuthMiddleware.validateJWT],controller.getEventsSummary)
-
+      router.get('/students/risk',[AuthMiddleware.validateJWT],controller.getStudentsAtRisk)
       return router;
     }
 }

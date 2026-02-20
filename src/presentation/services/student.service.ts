@@ -511,4 +511,68 @@ export class StudentServices{
      }
       
      }
+
+     getAllStudentsWithNoCourses = async() =>{
+      try{
+         const students = await prisma.students.findMany(({
+           where: {
+             StudentCourses: {
+              none: {}
+           }},
+           select:{
+            id:true,
+            first_name:true,
+            last_name:true
+           }
+         }))
+
+         return students
+      }
+      catch(error){
+         console.log(error);
+         throw CustomError.internalServerError('Internal Server Error');
+      }
+     }
+
+       getAllStudentsWithPastSixMonthOfEnrollment = async () => {
+         try {
+           const sixMonthsAgo = new Date();
+           sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+           const students = await prisma.students.findMany({
+             where: {
+               Enrollments: {
+                 some: {
+                   enrolled_at: {
+                     lte: sixMonthsAgo
+                   }
+                 }
+               },
+               NOT: {
+                 Enrollments: {
+                   some: {
+                     enrolled_at: {
+                       gt: sixMonthsAgo
+                     }
+                   }
+                 }
+               }
+             },
+             select: {
+               id: true,
+               first_name: true,
+               last_name: true,
+               Enrollments: {
+                 orderBy: { enrolled_at: 'desc' },
+                 take: 1
+               }
+             }
+           });
+
+           return students;
+         } catch (error) {
+           console.log(error);
+           throw CustomError.internalServerError('Internal Server Error');
+         }
+       }
 }
