@@ -15,6 +15,7 @@ export interface StudentsSummary{
     active:number,
     inactive:number
 }
+
 export interface StudentQueryParams{
     query:string,
     page:number,
