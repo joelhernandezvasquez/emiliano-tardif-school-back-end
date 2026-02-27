@@ -212,12 +212,14 @@ export class EventService{
             };
           }
         }
+        
         return filterCondition;
     }
 
     public searchEvents = async(eventQueryParams:EventQueryParams) =>{
       const {query,page} =eventQueryParams;
       const queryLower = query.toLocaleLowerCase();
+      console.log(query);
 
       try{
         //TODO:CODE DUPLICATED HERE AND ALSO IN GET EVENT PAGINATION PLAEASE AVOID DUPLICATION
