@@ -212,6 +212,7 @@ export class EventService{
             };
           }
         }
+        
         return filterCondition;
     }
 
