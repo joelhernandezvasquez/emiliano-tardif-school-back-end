@@ -7,6 +7,15 @@ import { CourseServices } from "./course.service";
 import { Util } from "../../config/util";
 import { StudentCourse } from "../interfaces/studentCourse.interface";
 
+type StudentCourseWithCourse = Prisma.StudentCourseGetPayload<{
+  include: { course: { select: { level: true; name: true } }; student: { select: { gender: true } } };
+}>;
+
+type FormattedCourse = {
+  level: string | number;
+  name: string;
+};
+
 enum filterConditionValues{
     Active = 'Active',
     Inactive = 'Inactive',
@@ -360,17 +369,17 @@ export class StudentServices{
 
           // Create a map for quick lookup of completed counts by level
           const completedMap = new Map(
-            completedByLevel.map((c) => [c.level, c.count])
+            completedByLevel.map((c: any) => [c.level, c.count])
           );
 
-          const coursesTakenByLevel = coursesByLevel.map((c) => ({
+          const coursesTakenByLevel = coursesByLevel.map((c: any) => ({
             level: c.level,
             courseLevelQuantity: c.courseLevelQuantity,
             coursesCompleted: completedMap.get(c.level) ?? 0,
           }));
 
           const filteredCoursesTakenByLevel = coursesTakenByLevel.filter(
-            (c) => c.level !== excludedLevel
+            (c: any) => c.level !== excludedLevel
           );
 
           return {
@@ -438,7 +447,7 @@ export class StudentServices{
               }
             }))
 
-            const courseListFormatted = courseList.map((element)=>{
+            const courseListFormatted = courseList.map((element: any)=>{
               return{
                 name:element.course.name,
                 description:element.course.description,
@@ -478,8 +487,8 @@ export class StudentServices{
         if(!studentExist){
           throw CustomError.notFound(`Student not found`);
         }
-        const currentCourseIds = (await CourseServices.getCourseIds()).map((course)=> course.id);
-        const completedStudentCoursesId = courses.map((course)=> course.course_id);
+        const currentCourseIds = (await CourseServices.getCourseIds()).map((course: any)=> course.id);
+        const completedStudentCoursesId = courses.map((course: any)=> course.course_id);
         
         const areCourseIdValid = completedStudentCoursesId.every((id)=> currentCourseIds.includes(id));
        

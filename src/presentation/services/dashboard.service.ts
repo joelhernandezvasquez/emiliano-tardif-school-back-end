@@ -4,6 +4,10 @@ import { StudentServices } from "./student.service";
 import { EventService } from "./event.service";
 import { EnrollmentService } from "./enrollment.service";
 import { DashboardEventSummary, DashboardSummary } from "../interfaces/dashboard.interface";
+import { Prisma } from "@prisma/client";
+
+type EventWithRelations = Prisma.EventsGetPayload<true>;
+
 export class DashboardServices{
 
    constructor(
@@ -40,8 +44,8 @@ export class DashboardServices{
         const events =  await this.eventServices.getAllEvents();
         const upcomingEvents = await this.eventServices.getUpcomingEvents();
         
-        const activeEvents = events.filter((event)=> event.status==='ongoing');
-        const pastActiveEvents = activeEvents.filter((event)=> event.end_date < today);
+        const activeEvents = events.filter((event: EventWithRelations)=> event.status==='ongoing');
+        const pastActiveEvents = activeEvents.filter((event: EventWithRelations)=> event.end_date < today);
      
         const closestEvent = upcomingEvents.at(0);
         const diffTime = closestEvent?.start_date ? Math.abs(new Date(closestEvent.start_date).getTime() - today.getTime()):0

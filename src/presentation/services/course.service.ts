@@ -3,6 +3,11 @@ import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Course } from "../interfaces/course.interface";
 
+type CourseLevelGroup = {
+  level: string | number;
+  _count: { level: number };
+};
+
 export class CourseServices{
     constructor(){}
 
@@ -143,7 +148,7 @@ export class CourseServices{
           orderBy: { level: 'asc' }
        })
        
-       const coursesFormatted = coursesByLevel.map((item)=>{
+       const coursesFormatted = coursesByLevel.map((item: CourseLevelGroup)=>{
         return{
           level:Util.formatCourseLevel(item.level.toString()),
           courseLevelQuantity:item._count.level

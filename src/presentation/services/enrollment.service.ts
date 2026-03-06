@@ -4,6 +4,11 @@ import { Enrollment, EnrollmentUpdate } from "../interfaces/enrollment.interface
 import { CourseServices } from "./course.service";
 import { EventService } from "./event.service";
 import { StudentServices } from "./student.service";
+import { Prisma } from "@prisma/client";
+
+type EnrollmentWithRelations = Prisma.EnrollmentsGetPayload<{
+  include: { student: true; event: { include: { course: true } } };
+}>;
 
 export class EnrollmentService{
     courseService = new CourseServices();
@@ -114,7 +119,7 @@ export class EnrollmentService{
           },
         });
 
-        const result = enrollments.map((enroll) => ({
+        const result = enrollments.map((enroll: EnrollmentWithRelations) => ({
           enrollmentId:enroll.id,
           studentId: (enroll.student.id),
           fullName: `${enroll.student.first_name} ${enroll.student.last_name}`,
@@ -213,7 +218,7 @@ export class EnrollmentService{
           },
         }))
         
-        const result = studentEnrollments.map((enrollment)=>(
+        const result = studentEnrollments.map((enrollment: EnrollmentWithRelations)=>(
           {
             eventId:enrollment.event.id,
             eventName:(enrollment.event.name),
