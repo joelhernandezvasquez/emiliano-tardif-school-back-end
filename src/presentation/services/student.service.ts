@@ -405,7 +405,7 @@ export class StudentServices{
               where: { student_id: id },
               select: { course_id: true },
             });
-            const completedIds = courseIdsCompleted.map((c) => c.course_id);
+            const completedIds = courseIdsCompleted.map((c: any) => c.course_id);
 
             const pendingCourses = await prisma.courses.findMany({
               where: {
