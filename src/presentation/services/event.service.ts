@@ -1,8 +1,11 @@
-import { EventStatus } from "@prisma/client";
+import { EventStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Event, EventQueryParams } from "../interfaces/event.interface";
 import { CourseServices } from "./course.service";
+
+type EventWithCourse = Prisma.EventsGetPayload<{ include: { course: true } }>;
+type EnrollmentForStudent = Prisma.EnrollmentsGetPayload<true>;
 
 export class EventService{
     constructor(){}
@@ -247,7 +250,7 @@ export class EventService{
           orderBy: { start_date: 'desc' }
         })
 
-        const eventIds = events.map(e => e.id);
+        const eventIds = events.map((e: any) => e.id);
         const enrollmentCounts = await prisma.enrollments.groupBy({
           by: ['event_id'],
           where: { event_id: { in: eventIds } },
@@ -255,8 +258,8 @@ export class EventService{
         });
 
           // Map counts to events
-        const eventsWithCounts = events.map(event => {
-          const countObj = enrollmentCounts.find(e => e.event_id === event.id);
+        const eventsWithCounts = events.map((event: any) => {
+          const countObj = enrollmentCounts.find((e: any) => e.event_id === event.id);
           return {
             ...event,
             enrollmentCount: countObj ? countObj._count.event_id : 0
@@ -349,7 +352,7 @@ export class EventService{
        const completeDate = new Date();
 
        const studentsCourseAdded = await prisma.studentCourse.createMany({
-        data: studentsEnrolled.map(student => ({
+        data: studentsEnrolled.map((student: any) => ({
             student_id: student.student_id,
             course_id: event.course_id,
             completedAt:completeDate.toISOString()
