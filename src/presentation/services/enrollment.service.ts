@@ -254,7 +254,7 @@ export class EnrollmentService{
               }
             })
             
-            const enrolledStudentIds = studentsEnrolled.map(enrollment => enrollment.student_id);
+            const enrolledStudentIds = studentsEnrolled.map((enrollment: any) => enrollment.student_id);
             
             const students = await prisma.students.findMany({
                select:{
