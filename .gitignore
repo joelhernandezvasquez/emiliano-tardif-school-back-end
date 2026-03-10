@@ -4,6 +4,8 @@
 
 
 .env
+.env.production
+.env.local
 
 mongo/
 /postgres/
