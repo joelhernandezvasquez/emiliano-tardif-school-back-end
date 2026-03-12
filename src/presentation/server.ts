@@ -1,6 +1,7 @@
 import express, { Router } from 'express';
 import path from 'path';
 import cors from 'cors';
+import { envs } from '../config/envs';
 
 interface Options {
   port: number;
@@ -27,9 +28,19 @@ export class Server {
   
   
   async start() {
+    const allowedOrigins = envs.CORS_ORIGINS
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
     
    this.app.use(cors({
-        origin: 'http://localhost:3000',
+        origin: (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+
+          return callback(new Error(`Origin ${ origin } not allowed by CORS`));
+        },
         credentials: true // Only if you're using cookies or auth headers
     }));
 
