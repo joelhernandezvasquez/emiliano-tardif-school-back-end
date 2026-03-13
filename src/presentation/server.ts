@@ -32,10 +32,19 @@ export class Server {
       .split(',')
       .map((origin) => origin.trim())
       .filter(Boolean);
+
+    const allowedOriginPatterns = [
+      /^https:\/\/([a-z0-9-]+\.)*vercel\.app$/i,
+      /^http:\/\/localhost:\d+$/i,
+    ];
+
+    const isAllowedOrigin = (origin: string) => {
+      return allowedOrigins.includes(origin) || allowedOriginPatterns.some((pattern) => pattern.test(origin));
+    };
     
    this.app.use(cors({
         origin: (origin, callback) => {
-          if (!origin || allowedOrigins.includes(origin)) {
+          if (!origin || isAllowedOrigin(origin)) {
             return callback(null, true);
           }
 
