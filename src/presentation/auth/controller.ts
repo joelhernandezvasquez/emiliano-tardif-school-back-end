@@ -24,9 +24,9 @@ export class AuthController {
     }
 
     register = (req:Request,res:Response) =>{
-      const {email,password} = req.body;
+      const {name,email,password} = req.body;
 
-      this.authService.registerUser({email,password})
+      this.authService.registerUser({name,email,password})
       .then((user) => res.json(user))
       .catch(error => this.handleError(error,res))
     }

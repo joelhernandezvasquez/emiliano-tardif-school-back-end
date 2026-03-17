@@ -24,6 +24,7 @@ export class AuthRoutes {
 
     router.post('/register',
       [
+        check('name').notEmpty().withMessage('Name cannot be empty'),
         check('email').isEmail().withMessage('Must be a valid email'),
         check('password').isLength({min:6}).withMessage("Password must be at least 6 characters")
       ],

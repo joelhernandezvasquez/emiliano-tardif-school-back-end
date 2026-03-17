@@ -4,6 +4,7 @@ import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 
 interface User{
+    name?:string,
     email:string,
     password:string
 }
@@ -13,7 +14,7 @@ export class AuthService{
     ){}
 
     public async registerUser(registerUser:User){
-        const {email, password} = registerUser;
+        const {name,email,password} = registerUser;
         const existUser  = await prisma.users.findUnique({
             where:{email}
         })
@@ -23,7 +24,7 @@ export class AuthService{
             const user = await prisma.users.create({
                 data: {
                  email,
-                 name: "Default Name",
+                 name:name!,
                  role:'admin',
                  password_hash:bcryptAdapter.hash(password)
                 },
