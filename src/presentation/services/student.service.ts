@@ -439,6 +439,7 @@ export class StudentServices{
                 completedAt:true,
                 course:{
                  select:{
+                  id:true,
                   name:true,
                   description:true,
                   level:true
@@ -449,6 +450,7 @@ export class StudentServices{
 
             const courseListFormatted = courseList.map((element: any)=>{
               return{
+                id:element.course.id,
                 name:element.course.name,
                 description:element.course.description,
                 level:element.course.level,
@@ -584,4 +586,43 @@ export class StudentServices{
            throw CustomError.internalServerError('Internal Server Error');
          }
        }
+
+      updateStudentCourseDate = async(studentCourse:StudentCourse) =>{
+       const {student_id,course_id,completedAt} = studentCourse;
+       const completedDate = new Date(completedAt!);
+  
+       try{
+          const [studentExist,courseExist] = await Promise.allSettled([this.checkStudentById(student_id!),CourseServices.checkCourseById(course_id)]);
+
+           if(!studentExist){
+              throw CustomError.notFound('Student does not exist');
+           }
+
+           if(!courseExist){
+              throw CustomError.notFound('Student does not exist');
+           }
+
+           await prisma.studentCourse.update({
+             where: {
+               student_id_course_id: {
+                 student_id: student_id!,
+                 course_id: course_id
+               }
+             },
+             data: {
+               completedAt: completedDate
+             }
+           })
+            return{
+            success:true,
+            message:'Course Date has been updated',
+       }
+
+        }
+         
+        catch (error) {
+           console.log(error);
+           throw CustomError.internalServerError('Internal Server Error');
+         }
+      }
 }
