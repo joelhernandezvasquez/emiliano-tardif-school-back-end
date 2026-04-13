@@ -58,6 +58,7 @@ export class StudentsRoutes {
     
       router.get('/:id/complete-courses',[AuthMiddleware.validateJWT],controller.getEnrollCourseList);
       
+      router.put('/:id/update-student-course-date',[AuthMiddleware.validateJWT],controller.updateStudentCourseDate)
      
 
       return router;

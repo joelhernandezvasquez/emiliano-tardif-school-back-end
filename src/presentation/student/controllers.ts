@@ -126,4 +126,19 @@ export class StudentController{
       .then((list)=> res.json(list))
       .catch((error)=> this.handleError(error,res))
     }
+
+    updateStudentCourseDate = (req:Request,res:Response)=>{
+      const {id} = req.params;
+      
+      const studentCourse:StudentCourse = {
+        student_id:+id,
+        course_id:req.body.course_id,
+        completedAt:req.body.completedAt
+      }
+
+      this.studentService.updateStudentCourseDate(studentCourse)
+      .then((studentCourse)=> res.json(studentCourse))
+      .catch((error)=> this.handleError(error,res))
+
+    }
 }
