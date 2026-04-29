@@ -1,3 +1,4 @@
+import { CourseLevel } from "@prisma/client";
 import { Util } from "../../config/util";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
@@ -171,6 +172,52 @@ export class CourseServices{
 
           return courseIds;
     }
+
+
+    private formatCourseLevel = (level:string):CourseLevel =>{
+        const normalizedLevel = level.trim().toUpperCase();
+
+        if ((Object.values(CourseLevel) as string[]).includes(normalizedLevel)) {
+          return normalizedLevel as CourseLevel;
+        }
+
+        throw CustomError.badRequest('Invalid course level');
+    }
+
+      public searchCourses = async (courseQueryParam:string) => {
+        
+          try {  
+            let whereClause;
+
+            if (courseQueryParam.toUpperCase().includes('RENACER')) {
+              whereClause = {
+                level: {
+                  in: [
+                    CourseLevel.RENACER_MUJERES,
+                    CourseLevel.RENACER_HOMBRE,
+                    CourseLevel.RENACER_PAREJAS
+                  ]
+                }
+              };
+            } else {
+              const courseLevel = this.formatCourseLevel(courseQueryParam);
+              whereClause = { level: courseLevel };
+            }
+
+            const courses = await prisma.courses.findMany({
+              where: whereClause
+            });
+             
+            return courses;
+
+          } catch (error) {
+            if (error instanceof CustomError) {
+              throw error;
+            }
+            throw CustomError.internalServerError('Internal Server Error');
+          }
+        }
+
 
 }
 

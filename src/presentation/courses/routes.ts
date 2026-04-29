@@ -24,6 +24,16 @@ export class CourseRoutes{
         courseController.createCourse
     );
 
+     router.get('/search',
+           [AuthMiddleware.validateJWT],
+           courseController.searchCourses
+          );
+
+     router.get('/total-courses-level',
+        [AuthMiddleware.validateJWT],
+        courseController.getTotalCoursesByLevel
+    )
+
     router.get('/courses',
         [AuthMiddleware.validateJWT],
         courseController.getCourses
@@ -32,6 +42,8 @@ export class CourseRoutes{
         [AuthMiddleware.validateJWT],
         courseController.getACourse
     )
+
+   
 
     router.put('/:id',
         [
