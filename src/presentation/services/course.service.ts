@@ -38,6 +38,7 @@ export class CourseServices{
 
     public createCourse = async(course:Course) =>{
      try{
+    
        const isCourseCreated = await this.checkCourse(course.name);
 
        if(isCourseCreated){
@@ -47,6 +48,7 @@ export class CourseServices{
        const newCourse = await prisma.courses.create({
         data:course
        })
+
 
        return{
         success:true,
@@ -199,7 +201,12 @@ export class CourseServices{
                   ]
                 }
               };
-            } else {
+            } 
+            else if(courseQueryParam === 'all' || courseQueryParam===""){
+              whereClause = {}
+            }
+            
+            else {
               const courseLevel = this.formatCourseLevel(courseQueryParam);
               whereClause = { level: courseLevel };
             }
