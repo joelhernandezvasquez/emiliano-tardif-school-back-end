@@ -4,6 +4,7 @@ import { CourseServices } from "../services/course.service";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { check } from "express-validator";
 import { FieldValidatorMiddleware } from "../middlewares/fieldValidator.middleware";
+import { multerAdapter } from "../../config/multer.adapter";
 
 export class CourseRoutes{
 
@@ -13,6 +14,7 @@ export class CourseRoutes{
      const courseController = new CourseController(courseService);
      
      router.post('/create',
+        multerAdapter.upload().single('image_file'),
         [
          check('name').notEmpty().withMessage('Course name cannot be empty.'),
          check('description').notEmpty().withMessage("Course description cannot be empty"),
@@ -43,9 +45,8 @@ export class CourseRoutes{
         courseController.getACourse
     )
 
-   
-
     router.put('/:id',
+        multerAdapter.upload().single('image_file'),
         [
          check('name').notEmpty().withMessage('Course name cannot be empty.'),
          check('description').notEmpty().withMessage("Course description cannot be empty"),

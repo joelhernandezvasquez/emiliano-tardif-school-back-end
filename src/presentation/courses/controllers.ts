@@ -15,10 +15,12 @@ export class CourseController{
           }
 
    public createCourse = (req:Request,res:Response) =>{
+     
      const courseData = {
       name:req.body.name.trim(),
       description:req.body.description.trim(),
-      level:req.body.level.trim()
+      level:req.body.level.trim(),
+      image_url:req.file ? `/images/${req.file.filename}`:null
      }
 
      this.courseService.createCourse(courseData)
@@ -40,13 +42,16 @@ export class CourseController{
      .catch((error)=> this.handleError(error,res))
    }
 
-   public updateCourse = (req:Request,res:Response) =>{
+   public updateCourse = async(req:Request,res:Response) =>{
      const {id} = req.params;
+     
+     const currentImageUrl = await CourseServices.checkCourseById(+id);
 
      const courseData = {
        name:req.body.name.trim(),
        description:req.body.description.trim(),
-       level:req.body.level.trim()
+       level:req.body.level.trim(),
+       image_url:req.file ? `/images/${req.file.filename}` : currentImageUrl?.image_url
      }
 
      this.courseService.updateCourse(parseInt(id),courseData)

@@ -1,4 +1,6 @@
 import { CourseLevel } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 import { Util } from "../../config/util";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
@@ -97,6 +99,14 @@ export class CourseServices{
           data:courseData,
           where:{id:courseId}
          })
+        
+         if (courseData.image_url && course.image_url && course.image_url !== courseData.image_url) {
+             const oldImagePath = path.join(process.cwd(), 'public', course.image_url);
+             fs.unlink(oldImagePath, () => {});
+         }
+
+
+
 
          return{
           success:true,
