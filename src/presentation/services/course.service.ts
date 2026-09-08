@@ -1,3 +1,6 @@
+import { CourseLevel } from "@prisma/client";
+import fs from "fs";
+import path from "path";
 import { Util } from "../../config/util";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
@@ -37,6 +40,7 @@ export class CourseServices{
 
     public createCourse = async(course:Course) =>{
      try{
+    
        const isCourseCreated = await this.checkCourse(course.name);
 
        if(isCourseCreated){
@@ -46,6 +50,7 @@ export class CourseServices{
        const newCourse = await prisma.courses.create({
         data:course
        })
+
 
        return{
         success:true,
@@ -94,6 +99,14 @@ export class CourseServices{
           data:courseData,
           where:{id:courseId}
          })
+        
+         if (courseData.image_url && course.image_url && course.image_url !== courseData.image_url) {
+             const oldImagePath = path.join(process.cwd(), 'public', course.image_url);
+             fs.unlink(oldImagePath, () => {});
+         }
+
+
+
 
          return{
           success:true,
@@ -171,6 +184,57 @@ export class CourseServices{
 
           return courseIds;
     }
+
+
+    private formatCourseLevel = (level:string):CourseLevel =>{
+        const normalizedLevel = level.trim().toUpperCase();
+
+        if ((Object.values(CourseLevel) as string[]).includes(normalizedLevel)) {
+          return normalizedLevel as CourseLevel;
+        }
+
+        throw CustomError.badRequest('Invalid course level');
+    }
+
+      public searchCourses = async (courseQueryParam:string) => {
+        
+          try {  
+            let whereClause;
+
+            if (courseQueryParam.toUpperCase().includes('RENACER')) {
+              whereClause = {
+                level: {
+                  in: [
+                    CourseLevel.RENACER_MUJERES,
+                    CourseLevel.RENACER_HOMBRE,
+                    CourseLevel.RENACER_PAREJAS
+                  ]
+                }
+              };
+            } 
+            else if(courseQueryParam === 'all' || courseQueryParam===""){
+              whereClause = {}
+            }
+            
+            else {
+              const courseLevel = this.formatCourseLevel(courseQueryParam);
+              whereClause = { level: courseLevel };
+            }
+
+            const courses = await prisma.courses.findMany({
+              where: whereClause
+            });
+             
+            return courses;
+
+          } catch (error) {
+            if (error instanceof CustomError) {
+              throw error;
+            }
+            throw CustomError.internalServerError('Internal Server Error');
+          }
+        }
+
 
 }
 

@@ -1,14 +1,12 @@
-
-
 generator client {
   provider = "prisma-client-js"
 }
-
 
 datasource db {
   provider = "postgresql"
   url      = env("POSTGRES_URL")
 }
+
 enum Role {
   admin
   super_admin
@@ -22,6 +20,7 @@ enum CourseLevel {
   RENACER_HOMBRE
   RENACER_PAREJAS
 }
+
 enum EventStatus {
   upcoming
   ongoing
@@ -36,74 +35,73 @@ enum EnrollStatus {
   cancelled
   completed
 }
-model Users{
-  id    Int     @id @default(autoincrement())
-  name String
-  email  String  @unique
+
+model Users {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
   password_hash String
-  role Role
-  created_at DateTime @default(now())
+  role          Role
+  created_at    DateTime @default(now())
 }
 
-model Students{
-  id    Int     @id @default(autoincrement())
-  first_name String
-  last_name String
-  email  String?  @unique
-  phone String
-  gender String
-  direccion String?
-  parroquia String?
+model Students {
+  id              Int             @id @default(autoincrement())
+  first_name      String
+  last_name       String
+  email           String?         @unique
+  phone           String
+  gender          String
+  direccion       String?
+  parroquia       String?
   asuntos_medicos String
-  active  Boolean @default(true)
-  created_at DateTime @default(now())
-  Enrollments Enrollments[]
+  active          Boolean         @default(true)
+  created_at      DateTime        @default(now())
+  Enrollments     Enrollments[]
+  StudentCourses  StudentCourse[]
+}
+
+model Courses {
+  id             Int             @id @default(autoincrement())
+  name           String          @unique
+  description    String
+  level          CourseLevel
+  image_url      String?
+  Events         Events[]
   StudentCourses StudentCourse[]
 }
 
-model Courses{
-  id    Int     @id @default(autoincrement())
-  name String  @unique
-  description String
-  level CourseLevel
-  Events Events[]
-  StudentCourses StudentCourse[]
-}
-
-model Events{
-  id    Int     @id @default(autoincrement())
-  name String
-  course_id Int
-  course    Courses @relation(fields: [course_id], references: [id])
-  price  Int
-  start_date DateTime
-  end_date DateTime
-  location String
-  status EventStatus
-  created_at DateTime @default(now())
+model Events {
+  id          Int           @id @default(autoincrement())
+  name        String
+  course_id   Int
+  course      Courses       @relation(fields: [course_id], references: [id])
+  price       Int
+  start_date  DateTime
+  end_date    DateTime
+  location    String
+  status      EventStatus
+  created_at  DateTime      @default(now())
   Enrollments Enrollments[]
 }
 
 model Enrollments {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   student_id  Int
   event_id    Int
-  enrolled_at DateTime @default(now())
-  status       EnrollStatus @default(registered) 
-  student     Students @relation(fields: [student_id], references: [id])
-  event       Events   @relation(fields: [event_id], references: [id])
+  enrolled_at DateTime     @default(now())
+  status      EnrollStatus @default(registered)
+  student     Students     @relation(fields: [student_id], references: [id])
+  event       Events       @relation(fields: [event_id], references: [id])
 }
 
-model StudentCourse{
-  student_id Int
-  course_id Int
+model StudentCourse {
+  student_id  Int
+  course_id   Int
   completedAt DateTime?
 
-  student   Students @relation(fields: [student_id], references: [id])
-  course    Courses  @relation(fields: [course_id], references: [id])
+  student Students @relation(fields: [student_id], references: [id])
+  course  Courses  @relation(fields: [course_id], references: [id])
 
   @@id([student_id, course_id])
 }
-
-
-
