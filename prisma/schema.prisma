@@ -51,10 +51,10 @@ model Students {
   last_name       String
   email           String?         @unique
   phone           String
-  gender          String
+  gender          String?
   direccion       String?
   parroquia       String?
-  asuntos_medicos String
+  asuntos_medicos String?
   active          Boolean         @default(true)
   created_at      DateTime        @default(now())
   Enrollments     Enrollments[]
