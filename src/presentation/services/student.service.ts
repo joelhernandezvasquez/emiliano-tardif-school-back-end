@@ -85,6 +85,10 @@ export class StudentServices{
           return {...studentEntity};
       }
       catch(err){
+         if(err instanceof CustomError) throw err;
+         if(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002'){
+            throw CustomError.badRequest('Email is already in use');
+         }
          throw CustomError.internalServerError('internal server error');
       }
     }

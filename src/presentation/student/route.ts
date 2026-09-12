@@ -19,9 +19,7 @@ export class StudentsRoutes {
         [
         check('first_name').notEmpty().isLength({min:2}).withMessage("First Name cannot be empty"),
         check('last_name').notEmpty().isLength({min:2}).withMessage("Last Name cannot be empty"),
-        check('phone').notEmpty(),
-        check('gender').notEmpty(),
-        check('asuntos_medicos').notEmpty(),
+        check('phone').notEmpty()
         ],
         FieldValidatorMiddleware.fieldValidator,
         [AuthMiddleware.validateJWT],

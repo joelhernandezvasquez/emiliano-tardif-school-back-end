@@ -21,7 +21,7 @@ export class StudentController{
       const studentData: Student= {
          first_name: req.body.first_name.trim(),
          last_name: req.body.last_name.trim(),
-         email: req.body.email.trim().toLowerCase(),
+         email: req.body.email?.trim().toLowerCase() || null,
          phone: req.body.phone.trim(),
          gender: req.body.gender,
          direccion: req.body.direccion?.trim(),
@@ -62,7 +62,7 @@ export class StudentController{
       const studentData: Student = {
         first_name: req.body.first_name.trim(),
         last_name: req.body.last_name.trim(),
-        email: req.body.email.trim().toLowerCase(),
+        email: req.body.email?.trim().toLowerCase() || null,
         phone: req.body.phone.trim(),
         gender: req.body.gender,
         direccion: req.body.direccion?.trim(),
