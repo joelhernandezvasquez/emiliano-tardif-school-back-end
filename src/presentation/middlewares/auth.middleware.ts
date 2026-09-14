@@ -17,10 +17,12 @@ export class AuthMiddleware{
             const payload = await JwtAdapter.validateToken<{id:string}>(token);
 
             if(!payload) return res.status(401).json({error:'Invalid Token'})
-            
-           
+
+            const userId = parseInt(payload.id);
+            if(Number.isNaN(userId)) return res.status(401).json({error:'Invalid Token'})
+
             const user = await prisma.users.findFirst({
-                where:{id:parseInt(payload.id)}
+                where:{id:userId}
             })
 
             if(!user) return res.status(401).json({error:'Invalid token - user'})
