@@ -15,12 +15,42 @@ constructor(public readonly reportService:ReportServices){}
     }
 
     getCompletionCourseList = (req:Request,res:Response) =>{
-        const {id} = req.params;
-
-       this.reportService.getCompletionCourseList(+id)
+        const {query} = req.query;
+       this.reportService.getCompletionCourseList(+query!)
       .then((list)=> res.json(list))
      .catch((error) => this.handleError(error,res))
     }
 
+    getPaginatedCompletionCourseList = (req:Request,res:Response) =>{
+        const courseId = Number(req.params.id);
+        const status = req.query.status === 'not-completed' ? 'not-completed' : 'completed';
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
+
+        if(!Number.isInteger(courseId) || courseId <= 0){
+            return res.status(400).json({error:'Invalid course id'});
+        }
+
+        this.reportService.getPaginatedCompletionCourseList(courseId,status,page,limit)
+        .then((list)=> res.json(list))
+        .catch((error) => this.handleError(error,res))
+    }
+
+    searchCompletionCourseList = (req:Request,res:Response) =>{
+        const courseId = Number(req.params.id);
+        const status = req.query.status === 'not-completed' ? 'not-completed' : 'completed';
+        const page = Math.max(1, Number(req.query.page) || 1);
+        const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
+        const rawSearch = req.query.search ?? req.query.query ?? req.query.q;
+        const search = typeof rawSearch === 'string' ? rawSearch.trim() : '';
+
+        if(!Number.isInteger(courseId) || courseId <= 0){
+            return res.status(400).json({error:'Invalid course id'});
+        }
+
+        this.reportService.searchCompletionCourseList(courseId,status,page,limit,search)
+        .then((list)=> res.json(list))
+        .catch((error) => this.handleError(error,res))
+    }
 
 }

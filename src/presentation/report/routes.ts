@@ -11,7 +11,9 @@ export class ReportRoutes{
         const controller = new ReportsController(reportService);
 
 
-        router.get('/:id/course-completion',[AuthMiddleware.validateJWT],controller.getCompletionCourseList)
+        router.get('/:id/course-completion',[AuthMiddleware.validateJWT],controller.getPaginatedCompletionCourseList)
+        router.get('/:id/course-completion/search',[AuthMiddleware.validateJWT],controller.searchCompletionCourseList)
+        router.get('/course-completion',[AuthMiddleware.validateJWT],controller.getCompletionCourseList)
         
         return router;
      }
