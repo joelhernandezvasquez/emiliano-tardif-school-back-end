@@ -5,6 +5,7 @@ import { CourseRoutes } from './courses/routes';
 import { EventRoutes } from './events/routes';
 import { EnrollmentRoutes } from './enrollments/routes';
 import { DashboardRoutes } from './dashboard/route';
+import { ReportRoutes } from './report/routes';
 export class AppRoutes {
 
   static get routes(): Router {
@@ -18,6 +19,7 @@ export class AppRoutes {
     router.use('/api/events',EventRoutes.routes);
     router.use('/api/enrollments',EnrollmentRoutes.routes);
     router.use('/api/dashboard',DashboardRoutes.routes);
+    router.use('/api/report',ReportRoutes.routes);
 
     return router;
   }
