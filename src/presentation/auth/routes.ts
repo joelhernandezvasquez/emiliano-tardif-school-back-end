@@ -3,6 +3,7 @@ import { AuthController } from './controller';
 import { AuthService } from '../services/auth.service';
 import { check } from 'express-validator';
 import { FieldValidatorMiddleware } from '../middlewares/fieldValidator.middleware';
+import { AuthMiddleware } from '../middlewares/auth.middleware';
 
 export class AuthRoutes {
 
@@ -23,6 +24,7 @@ export class AuthRoutes {
     );
 
     router.post('/register',
+      AuthMiddleware.validateJWT,
       [
         check('name').notEmpty().withMessage('Name cannot be empty'),
         check('email').isEmail().withMessage('Must be a valid email'),
@@ -34,6 +36,7 @@ export class AuthRoutes {
     );
 
     router.get('/refresh-token/:id',
+      AuthMiddleware.validateJWT,
       controller.refreshToken
     )
 

@@ -30,7 +30,9 @@ export class AuthService{
                 },
               })
    
-           return {user};
+           const {password_hash,...userEntity} = user;
+
+           return {user:userEntity};
         } 
    
         catch(error){

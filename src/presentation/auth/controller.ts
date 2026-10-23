@@ -34,6 +34,8 @@ export class AuthController {
        refreshToken = (req:Request,res:Response) =>{
       const {id} = req.params;
 
+      if(+id !== req.body.user.id) return res.status(403).json({error:'Forbidden'});
+
       this.authService.refreshToken(+id)
       .then((user) => res.json(user))
       .catch(error => this.handleError(error,res))
