@@ -14,6 +14,7 @@ export class CourseRoutes{
      const courseController = new CourseController(courseService);
      
      router.post('/create',
+        AuthMiddleware.validateJWT,
         multerAdapter.upload().single('image_file'),
         [
          check('name').notEmpty().withMessage('Course name cannot be empty.'),
@@ -22,7 +23,6 @@ export class CourseRoutes{
          check('level').isIn(['NIVEL_1_JESUS_ESTA_VIVO','NIVEL_2_JESUS_NOS_CAPACITA','NIVEL_3_JESUS_NOS_ENVIA','RENACER_MUJERES','RENACER_HOMBRE','RENACER_PAREJAS']).withMessage('Course/Retreat Level does not match.')
         ],
         FieldValidatorMiddleware.fieldValidator,
-        [AuthMiddleware.validateJWT],
         courseController.createCourse
     );
 
@@ -46,6 +46,7 @@ export class CourseRoutes{
     )
 
     router.put('/:id',
+        AuthMiddleware.validateJWT,
         multerAdapter.upload().single('image_file'),
         [
          check('name').notEmpty().withMessage('Course name cannot be empty.'),
@@ -54,7 +55,6 @@ export class CourseRoutes{
          check('level').isIn(['NIVEL_1_JESUS_ESTA_VIVO','NIVEL_2_JESUS_NOS_CAPACITA','NIVEL_3_JESUS_NOS_ENVIA','RENACER_MUJERES','RENACER_HOMBRE','RENACER_PAREJAS']).withMessage('Course/Retreat Level does not match.')
         ],
         FieldValidatorMiddleware.fieldValidator,
-        [AuthMiddleware.validateJWT],
         courseController.updateCourse
     )
     router.delete('/:id',

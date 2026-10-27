@@ -1,13 +1,14 @@
+import { compare, genSalt, hash } from 'bcryptjs';
 
-import { compareSync, genSalt, genSaltSync, hashSync } from 'bcryptjs';
+const SALT_ROUNDS = 12;
 
 export const bcryptAdapter = {
-    hash:(password:string) =>{
-        const salt = genSaltSync();
-        return hashSync(password,salt);
+    hash: async (password:string) =>{
+        const salt = await genSalt(SALT_ROUNDS);
+        return hash(password,salt);
     },
 
-    compare:(password:string,hashed:string) => {
-     return compareSync(password,hashed);
+    compare: (password:string,hashed:string) => {
+     return compare(password,hashed);
     }
 }

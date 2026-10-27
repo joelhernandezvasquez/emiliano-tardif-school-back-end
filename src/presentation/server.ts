@@ -1,6 +1,8 @@
 import express, { Router } from 'express';
 import path from 'path';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { envs } from '../config/envs';
 
 interface Options {
@@ -51,6 +53,21 @@ export class Server {
           return callback(new Error(`Origin ${ origin } not allowed by CORS`));
         },
         credentials: true // Only if you're using cookies or auth headers
+    }));
+
+    //* Security
+    this.app.set('trust proxy', envs.TRUST_PROXY);
+    this.app.use(helmet({
+      // uploaded images are loaded cross-origin by the frontend
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: false,
+    }));
+    this.app.use('/api', rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 600,
+      standardHeaders: true,
+      legacyHeaders: false,
+      message: { error: 'Too many requests, try again later' },
     }));
 
     //* Middlewares
