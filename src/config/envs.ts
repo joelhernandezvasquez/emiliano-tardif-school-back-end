@@ -7,6 +7,7 @@ export const envs = {
   JWT_SEED: get('JWT_SEED').required().asString(),
   DATABASE_URL: get('DATABASE_URL').required().asString(),
   API_URL: get('API_URL').required().asString(),
+  TRUST_PROXY: get('TRUST_PROXY').default('0').asIntPositive(),
   CORS_ORIGINS: get('CORS_ORIGINS')
     .default('http://localhost:3000,https://cscv-school-9r8w1u9qs-joelhernandezvasquezs-projects.vercel.app,https://www.cscvbrooklyn.com')
     .asString(),

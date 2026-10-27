@@ -26,7 +26,7 @@ export class AuthService{
                  email,
                  name:name!,
                  role:'admin',
-                 password_hash:bcryptAdapter.hash(password)
+                 password_hash:await bcryptAdapter.hash(password)
                 },
               })
    
@@ -36,7 +36,8 @@ export class AuthService{
         } 
    
         catch(error){
-          throw CustomError.internalServerError(`${error}`)
+          console.log(error);
+          throw CustomError.internalServerError('Error while creating user')
         }
        }
 
@@ -47,11 +48,11 @@ export class AuthService{
         where:{email}
      });
 
-    if(!user) throw CustomError.badRequest('Email not exist in our records.');
+    if(!user) throw CustomError.badRequest('Invalid credentials');
 
-    const isMatching = bcryptAdapter.compare(password,user.password_hash);
+    const isMatching = await bcryptAdapter.compare(password,user.password_hash);
 
-     if(!isMatching) throw CustomError.badRequest('Password is invalid.');
+     if(!isMatching) throw CustomError.badRequest('Invalid credentials');
 
      const{password_hash,...userEntity} = user;
 
