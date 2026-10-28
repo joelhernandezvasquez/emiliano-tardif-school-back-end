@@ -144,9 +144,11 @@ export class StudentServices{
          throw CustomError.notFound('Student does not exist');
         }
        
-        await prisma.students.delete({
-         where:{id:studentId}
-        })
+        await prisma.$transaction([
+         prisma.enrollments.deleteMany({where:{student_id:studentId}}),
+         prisma.studentCourse.deleteMany({where:{student_id:studentId}}),
+         prisma.students.delete({where:{id:studentId}})
+        ])
 
         return {
          success:true,
@@ -155,7 +157,9 @@ export class StudentServices{
 
       }
       catch(error){
-         throw CustomError.notFound('Student does not exist');
+         if(error instanceof CustomError) throw error;
+         console.log(`deleteStudent failed: ${error}`);
+         throw CustomError.internalServerError('Could not delete student');
       }
     }
 
