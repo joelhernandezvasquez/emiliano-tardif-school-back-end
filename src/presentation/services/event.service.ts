@@ -1,11 +1,10 @@
-import { EventStatus, Prisma } from "@prisma/client";
+import { EnrollStatus, EventStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Event, EventQueryParams } from "../interfaces/event.interface";
 import { CourseServices } from "./course.service";
 
-type EventWithCourse = Prisma.EventsGetPayload<{ include: { course: true } }>;
-type EnrollmentForStudent = Prisma.EnrollmentsGetPayload<true>;
+const ITEMS_PER_PAGE = 9;
 
 export class EventService{
     constructor(){}
@@ -21,7 +20,7 @@ export class EventService{
         return eventExist;
       }
       catch(error){
-       throw CustomError.internalServerError('internal server error')
+       throw CustomError.wrap(error);
       }
     }
 
@@ -52,7 +51,7 @@ export class EventService{
          return event;
        }
        catch(error){
-         throw new Error('Internal Serve Error');
+         throw CustomError.wrap(error);
        }
     }
 
@@ -92,12 +91,18 @@ export class EventService{
        }
       }
       catch(error){
-        if(error instanceof Error){
-       throw CustomError.internalServerError(error.message)
+        throw CustomError.wrap(error);
       }
-       throw CustomError.internalServerError('Internal server error');
+
     }
 
+    public getTotalEvents = async() =>{
+      try{
+         return await prisma.events.count();
+      }
+      catch(error){
+        throw CustomError.wrap(error);
+      }
     }
 
     public getAllEvents = async() =>{
@@ -105,12 +110,9 @@ export class EventService{
          const eventsList = await prisma.events.findMany();
          return eventsList;
       }
-     catch(error){
-        if(error instanceof Error){
-       throw CustomError.internalServerError(error.message)
+      catch(error){
+        throw CustomError.wrap(error);
       }
-       throw CustomError.internalServerError('Internal server error');
-    }
     }
 
     public getEvent = async(eventId:number) =>{
@@ -123,12 +125,9 @@ export class EventService{
 
          return event; 
       }
-     catch(error){
-        if(error instanceof Error){
-       throw CustomError.internalServerError(error.message)
+      catch(error){
+        throw CustomError.wrap(error);
       }
-       throw CustomError.internalServerError('Internal server error');
-    }
     }
 
     public updateEvent = async(eventData:Event,eventId:number) =>{
@@ -171,10 +170,7 @@ export class EventService{
 
       }
       catch(error){
-      if(error instanceof Error){
-       throw CustomError.internalServerError(error.message)
-      }
-       throw CustomError.internalServerError('Internal server error');
+        throw CustomError.wrap(error);
       }
     }
 
@@ -189,45 +185,44 @@ export class EventService{
         ])
           return {total,upcoming,completed};
       }
-     catch(error){
-      if(error instanceof Error){
-       throw CustomError.internalServerError(error.message)
+      catch(error){
+        throw CustomError.wrap(error);
       }
-       throw CustomError.internalServerError('Internal server error');
-      }  
     }
 
-    private getEventFilterCondition = (query:string) =>{
-          const allowedStatuses = ['upcoming', 'completed', 'cancelled', 'ongoing'] as const;
-          let filterCondition: any;
+    private normalizeEventQuery = (query:string) =>{
+        const queryLower = query.toLocaleLowerCase();
+        return queryLower === 'active' ? 'ongoing' : queryLower;
+    }
 
-        if (query && query !== 'all') {
-          if (allowedStatuses.includes(query as any)) {
-            filterCondition = { status: query };
-          } 
-          else {
-            filterCondition = {
-              OR: [
-                { name: { contains: query, mode: 'insensitive' } },
-                { price: { contains: query, mode: 'insensitive' } },
-                 { status: { contains: query, mode: 'insensitive' } },
-              ]
-            };
-          }
+    private getEventFilterCondition = (query:string):Prisma.EventsWhereInput | undefined =>{
+          const allowedStatuses = Object.values(EventStatus) as string[];
+
+        if (!query || query === 'all') {
+          return undefined;
         }
-        
-        return filterCondition;
+
+        if (allowedStatuses.includes(query)) {
+          return { status: query as EventStatus };
+        }
+
+        const orConditions:Prisma.EventsWhereInput[] = [
+          { name: { contains: query, mode: 'insensitive' } },
+        ];
+
+        if (/^\d+$/.test(query)) {
+          orConditions.push({ price: Number(query) });
+        }
+
+        return { OR: orConditions };
     }
 
     public searchEvents = async(eventQueryParams:EventQueryParams) =>{
       const {query,page} =eventQueryParams;
-      const queryLower = query.toLocaleLowerCase();
 
       try{
-        //TODO:CODE DUPLICATED HERE AND ALSO IN GET EVENT PAGINATION PLAEASE AVOID DUPLICATION
-        const ITEMS_PER_PAGE = 9;
         const skip = (page -1) * ITEMS_PER_PAGE;
-        const filterCondition = this.getEventFilterCondition(queryLower);
+        const filterCondition = this.getEventFilterCondition(this.normalizeEventQuery(query));
   
         const events = await prisma.events.findMany({
           select:{
@@ -244,13 +239,13 @@ export class EventService{
             }
            }
           },
-          where: queryLower && queryLower !== 'all' ? filterCondition : undefined,
+          where: filterCondition,
           skip,
           take: ITEMS_PER_PAGE,
           orderBy: { start_date: 'desc' }
         })
 
-        const eventIds = events.map((e: any) => e.id);
+        const eventIds = events.map((e) => e.id);
         const enrollmentCounts = await prisma.enrollments.groupBy({
           by: ['event_id'],
           where: { event_id: { in: eventIds } },
@@ -258,8 +253,8 @@ export class EventService{
         });
 
           // Map counts to events
-        const eventsWithCounts = events.map((event: any) => {
-          const countObj = enrollmentCounts.find((e: any) => e.event_id === event.id);
+        const eventsWithCounts = events.map((event) => {
+          const countObj = enrollmentCounts.find((e) => e.event_id === event.id);
           return {
             ...event,
             enrollmentCount: countObj ? countObj._count.event_id : 0
@@ -269,35 +264,29 @@ export class EventService{
          return eventsWithCounts;
       }
       catch(error){
-        if(error instanceof Error){
-          throw CustomError.internalServerError(error.message)
-        }
-        throw CustomError.internalServerError('Internal server error');
+        throw CustomError.wrap(error);
       }
      
     }
 
     getEventPagination = async (eventQueryParams:EventQueryParams) =>{
      try{
-        const {query,page} =eventQueryParams;
-        const queryLower = query.toLocaleLowerCase();
-        const filterCondition = this.getEventFilterCondition(queryLower);
-        const ITEMS_PER_PAGE = 9;
+        const {query} =eventQueryParams;
+        const filterCondition = this.getEventFilterCondition(this.normalizeEventQuery(query));
 
-        const events = await prisma.events.findMany({
-          where: queryLower && queryLower !== 'all' ? filterCondition : undefined,
+        const totalCount = await prisma.events.count({
+          where: filterCondition,
         })
 
-        const totalPages = Math.ceil(Number(events.length) / ITEMS_PER_PAGE);
+        const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
       return{
         totalPages,
-        totalCount:events.length
+        totalCount
       }
      }
      catch(error){
-      console.log(error);
-      throw CustomError.internalServerError('Internal Server Error');
+      throw CustomError.wrap(error);
      }
     }
 
@@ -314,62 +303,42 @@ export class EventService{
             throw CustomError.notFound('Course does not exist!');
           }
 
-          // First Action update the event to complete
-          const completedEvent = {
-            id: event.id,
-            name: event.name,
-            course_id: event.course_id,
-            price: event.price,
-            start_date: event.start_date,
-            end_date: event.end_date,
-            location: event.location,
-            status:EventStatus.completed
-          }
+          // the three writes succeed or fail together so an event is never left completed without its student courses
+          await prisma.$transaction(async (tx)=>{
+            await tx.events.update({
+              where:{id:eventId},
+              data:{status:EventStatus.completed}
+            })
 
+            await tx.enrollments.updateMany({
+              where:{event_id:eventId,status:EnrollStatus.enrolled},
+              data:{status:EnrollStatus.completed}
+            })
 
-       const updatedEvent = await prisma.events.update(({
-        where:{id:eventId},
-        data:completedEvent
-       }))
+            const studentsEnrolled = await tx.enrollments.findMany({
+              where:{event_id:eventId,status:EnrollStatus.completed},
+              select:{student_id:true}
+            })
 
+            const completeDate = new Date();
 
-       // Second Action will be to update the table enrollment based on the students
+            await tx.studentCourse.createMany({
+              data: studentsEnrolled.map((student) => ({
+                student_id: student.student_id,
+                course_id: event.course_id,
+                completedAt:completeDate
+              })),
+              skipDuplicates:true
+            })
+          })
 
-       const enrollmentUpdate = await prisma.enrollments.updateMany(({
-        where:{event_id:eventId,status:'enrolled'},
-        data:{status:EventStatus.completed}
-       }))
-
-       // Third Action will be to add to student course
-
-       const studentsEnrolled = await prisma.enrollments.findMany(({
-         where:{event_id:eventId,status:'completed'},
-         select:{
-          student_id:true
-         }
-       }))
-       
-       const completeDate = new Date();
-
-       const studentsCourseAdded = await prisma.studentCourse.createMany({
-        data: studentsEnrolled.map((student: any) => ({
-            student_id: student.student_id,
-            course_id: event.course_id,
-            completedAt:completeDate.toISOString()
-          })),
-           skipDuplicates:true
-       })
-           if(!studentsCourseAdded){
-             throw CustomError.notFound('Students Enrollment Failed');
-           }
            return {
              success:true,
              message:'Event has been completed'
            }
       }
        catch(error){
-        console.log(error);
-        throw CustomError.internalServerError('Internal Server Error');
+        throw CustomError.wrap(error);
      }
     }
 
@@ -384,8 +353,7 @@ export class EventService{
       }
 
        catch(error){
-        console.log(error);
-        throw CustomError.internalServerError('Internal Server Error');
+        throw CustomError.wrap(error);
      }
 
     }

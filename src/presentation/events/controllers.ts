@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { EventService } from "../services/event.service";
 import { Event } from "../interfaces/event.interface";
 import { CustomError } from "../../domain/errors/custom.error";
-import { error } from "console";
 
 export class EventController {
     constructor(public readonly eventService:EventService){}
@@ -70,11 +69,9 @@ export class EventController {
 
   public searchEvents = async(req:Request,res:Response) =>{
     const {query, page} = req.query;
-     //TODO: fix this logic that is duplicated in search events and also in get event pagination function
-    const queryParam = query === 'Active' ? 'ongoing':query;
-      
+
       const eventQueryParams = {
-        query: typeof queryParam=== 'string' ? queryParam : '',
+        query: typeof query === 'string' ? query : '',
         page: +(page ?? 1),
        }
    
@@ -84,11 +81,9 @@ export class EventController {
   }
   getEventPagination = (req:Request,res:Response) =>{
       const {query, page} = req.query;
-      //TODO: fix this logic that is duplicated in search events and also in get event pagination function
-      const queryParam = query === 'Active' ? 'ongoing':query;
 
       const eventQueryParams = {
-        query: typeof queryParam=== 'string' ? queryParam : '',
+        query: typeof query === 'string' ? query : '',
         page: +(page ?? 1),
        }
 

@@ -7,15 +7,6 @@ import { CourseServices } from "./course.service";
 import { Util } from "../../config/util";
 import { StudentCourse } from "../interfaces/studentCourse.interface";
 
-type StudentCourseWithCourse = Prisma.StudentCourseGetPayload<{
-  include: { course: { select: { level: true; name: true } }; student: { select: { gender: true } } };
-}>;
-
-type FormattedCourse = {
-  level: string | number;
-  name: string;
-};
-
 enum filterConditionValues{
     Active = 'Active',
     Inactive = 'Inactive',
@@ -26,6 +17,22 @@ enum filterConditionValues{
     MostCourses='Most Courses',
     LeastCourses = 'Least Courses'
 }
+
+const ITEMS_PER_PAGE = 7;
+
+const studentListSelect = {
+    id:true,
+    first_name:true,
+    last_name:true,
+    email:true,
+    phone:true,
+    gender:true,
+    direccion:true,
+    parroquia:true,
+    asuntos_medicos:true,
+    active:true,
+    created_at:true
+} satisfies Prisma.StudentsSelect;
 
 export class StudentServices{
 
@@ -74,7 +81,7 @@ export class StudentServices{
                first_name:student.first_name,
                last_name:student.last_name,
                email:student.email,
-               phone:student.phone!,
+               phone:student.phone,
                gender:student.gender,
                direccion:student.direccion,
                parroquia:student.parroquia,
@@ -85,11 +92,10 @@ export class StudentServices{
           return {...studentEntity};
       }
       catch(err){
-         if(err instanceof CustomError) throw err;
-         if(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002'){
+         if(Util.isPrismaError(err,'P2002')){
             throw CustomError.badRequest('Email is already in use');
          }
-         throw CustomError.internalServerError('internal server error');
+         throw CustomError.wrap(err);
       }
     }
 
@@ -97,17 +103,7 @@ export class StudentServices{
       try{
        const students = await prisma.students.findMany({
         select:{
-          id:true,
-          first_name:true,
-          last_name:true,
-          email:true,
-          phone:true,
-          gender:true,
-          direccion:true,
-          parroquia:true,
-          asuntos_medicos:true,
-          active:true,
-          created_at:true,
+          ...studentListSelect,
           _count:{
             select:{Enrollments:true}
           }
@@ -116,7 +112,16 @@ export class StudentServices{
        return students;
       }
       catch(err){
-         throw CustomError.internalServerError('internal server error');
+         throw CustomError.wrap(err);
+      }
+    }
+
+    public getTotalStudents = async () =>{
+      try{
+        return await prisma.students.count();
+      }
+      catch(err){
+         throw CustomError.wrap(err);
       }
     }
 
@@ -132,7 +137,7 @@ export class StudentServices{
 
     }
      catch(error){
-      throw CustomError.notFound('Student does not exist');
+      throw CustomError.wrap(error);
      }
     }
 
@@ -157,9 +162,7 @@ export class StudentServices{
 
       }
       catch(error){
-         if(error instanceof CustomError) throw error;
-         console.log(`deleteStudent failed: ${error}`);
-         throw CustomError.internalServerError('Could not delete student');
+         throw CustomError.wrap(error,'Could not delete student');
       }
     }
 
@@ -184,52 +187,51 @@ export class StudentServices{
 
       }
       catch(error){
-         throw CustomError.notFound('Student does not exist');
+         if(Util.isPrismaError(error,'P2002')){
+            throw CustomError.badRequest('Email is already in use');
+         }
+         throw CustomError.wrap(error);
       }
     }
 
-  public  getFilterStudentCondition = (query:string) =>{
-       const conditions:any[] = [
+  public  getFilterStudentCondition = (query:string):Prisma.StudentsWhereInput[] =>{
+        if(query === filterConditionValues.Active) return [{active:true}];
+        if(query === filterConditionValues.Inactive) return [{active:false}];
+
+        return [
               { first_name: { contains: query, mode: 'insensitive' } },
               { last_name: { contains: query, mode: 'insensitive' } },
               { phone: { contains: query, mode: 'insensitive' } },
               { email: { contains: query, mode: 'insensitive' } },
         ];
-    
-        const conditionsFilter:any = [
-          query === filterConditionValues.Active ? {active:true} : {},
-          query === filterConditionValues.Inactive ? {active:false}:{},
-        ]
-
-      return [...conditions,...conditionsFilter];
     }
-        private getSortedStudent= (sortBy:string) =>{
+        private getSortedStudent= (sortBy:string):Prisma.StudentsOrderByWithRelationInput | undefined =>{
 
           if(!sortBy){
             return undefined;
           }
-         const sortMapping: Record<string, Record<string, Prisma.SortOrder>> = {
+         const sortMapping: Record<string, Prisma.StudentsOrderByWithRelationInput> = {
             [filterConditionValues.Recent]: { created_at: Prisma.SortOrder.desc },
             [filterConditionValues.Oldest]: {created_at: Prisma.SortOrder.asc },
             [filterConditionValues.AZ]: {first_name: Prisma.SortOrder.asc },
             [filterConditionValues.ZA]: {first_name: Prisma.SortOrder.desc },
         };
     
-        const normalizedSortBy = sortBy=== 'A to Z' ? filterConditionValues.MostCourses : 
-                                 sortBy === 'Z to A' ? filterConditionValues.MostCourses: 
+        const normalizedSortBy = sortBy=== 'A to Z' ? filterConditionValues.AZ : 
+                                 sortBy === 'Z to A' ? filterConditionValues.ZA: 
                                  sortBy;
     
         return sortMapping[normalizedSortBy] || undefined;
     }
 
-    private getOrderClause = (sortBy:string) =>{
+    private getOrderClause = (sortBy:string):Prisma.StudentsOrderByWithRelationInput | Prisma.StudentsOrderByWithRelationInput[] | undefined =>{
 
          if (sortBy === filterConditionValues.MostCourses) {
-             return [{ StudentCourses: { _count: 'desc' } }];
+             return [{ StudentCourses: { _count: Prisma.SortOrder.desc } }];
             } 
             
          if(sortBy === filterConditionValues.LeastCourses) {
-            return [{ StudentCourses: { _count: 'asc' } }];
+            return [{ StudentCourses: { _count: Prisma.SortOrder.asc } }];
 
           } 
         return this.getSortedStudent(sortBy);
@@ -239,24 +241,13 @@ export class StudentServices{
       const {query,page,sortBy} = studentQueryParams;
       
       try {
-        const ITEMS_PER_PAGE = 7;
         const skip = (page -1) * ITEMS_PER_PAGE;
         const filterCondition = this.getFilterStudentCondition(query);
-        let orderByClause:any = this.getOrderClause(sortBy!);
+        const orderByClause = this.getOrderClause(sortBy!);
             
         const students = await prisma.students.findMany({
            select:{
-          id:true,
-          first_name:true,
-          last_name:true,
-          email:true,
-          phone:true,
-          gender:true,
-          direccion:true,
-          parroquia:true,
-          asuntos_medicos:true,
-          active:true,
-          created_at:true,
+          ...studentListSelect,
           _count:{
             select:{StudentCourses:true}
           }
@@ -271,7 +262,7 @@ export class StudentServices{
          
          return students;
       } catch (error) {
-        throw CustomError.internalServerError('Internal Server Error');
+        throw CustomError.wrap(error);
       }
     }
 
@@ -290,8 +281,7 @@ export class StudentServices{
        }
       }
       catch(error){
-        console.log(error);
-         throw CustomError.internalServerError('Internal Server Error');
+         throw CustomError.wrap(error);
       }
     }
 
@@ -319,8 +309,7 @@ export class StudentServices{
             return studentCourses;
        }
        catch(error){
-        console.log(error)
-        throw CustomError.internalServerError(error as string)
+        throw CustomError.wrap(error)
        }
     }
 
@@ -330,12 +319,11 @@ export class StudentServices{
           return studentCourses;
        }
        catch(error){
-        console.log(error)
-        throw CustomError.internalServerError(error as string)
+        throw CustomError.wrap(error)
        }
     }
 
-    private getCoursesCompletedByLevel = (studentCourses:any []) =>{
+    private getCoursesCompletedByLevel = (studentCourses:{course:{level:string}}[]) =>{
       
       const completedByLevel = Object.entries(
               studentCourses.reduce((acc, sc) => {
@@ -377,17 +365,17 @@ export class StudentServices{
 
           // Create a map for quick lookup of completed counts by level
           const completedMap = new Map(
-            completedByLevel.map((c: any) => [c.level, c.count])
+            completedByLevel.map((c) => [c.level, c.count])
           );
 
-          const coursesTakenByLevel = coursesByLevel.map((c: any) => ({
+          const coursesTakenByLevel = coursesByLevel.map((c) => ({
             level: c.level,
             courseLevelQuantity: c.courseLevelQuantity,
             coursesCompleted: completedMap.get(c.level) ?? 0,
           }));
 
           const filteredCoursesTakenByLevel = coursesTakenByLevel.filter(
-            (c: any) => c.level !== excludedLevel
+            (c) => c.level !== excludedLevel
           );
 
           return {
@@ -396,11 +384,7 @@ export class StudentServices{
             coursesTakenByLevel: filteredCoursesTakenByLevel,
           };
         } catch (error) {
-          console.error(error);
-          if (error instanceof CustomError) throw error;
-          throw CustomError.internalServerError(
-            error instanceof Error ? error.message : String(error)
-          );
+          throw CustomError.wrap(error);
         }
       }
 
@@ -413,7 +397,7 @@ export class StudentServices{
               where: { student_id: id },
               select: { course_id: true },
             });
-            const completedIds = courseIdsCompleted.map((c: any) => c.course_id);
+            const completedIds = courseIdsCompleted.map((c) => c.course_id);
 
             const pendingCourses = await prisma.courses.findMany({
               where: {
@@ -431,11 +415,7 @@ export class StudentServices{
             return pendingCourses;
 
           } catch (error) {
-            console.error(error);
-            if (error instanceof CustomError) throw error;
-            throw CustomError.internalServerError(
-              error instanceof Error ? error.message : String(error)
-            );
+            throw CustomError.wrap(error);
           }
       }
 
@@ -456,7 +436,7 @@ export class StudentServices{
               }
             }))
 
-            const courseListFormatted = courseList.map((element: any)=>{
+            const courseListFormatted = courseList.map((element)=>{
               return{
                 id:element.course.id,
                 name:element.course.name,
@@ -469,14 +449,13 @@ export class StudentServices{
           return courseListFormatted;
          }
          catch(error){
-           console.log(error);
+           throw CustomError.wrap(error);
          }
       }
 
     getStudentPagination = async () =>{
      try{
         const students = await prisma.students.count();
-        const ITEMS_PER_PAGE = 7;
         const totalPages = Math.ceil(Number(students) / ITEMS_PER_PAGE);
 
       return{
@@ -485,8 +464,7 @@ export class StudentServices{
       }
      }
      catch(error){
-      console.log(error);
-      throw CustomError.internalServerError('Internal Server Error');
+      throw CustomError.wrap(error);
      }
     }
 
@@ -497,8 +475,8 @@ export class StudentServices{
         if(!studentExist){
           throw CustomError.notFound(`Student not found`);
         }
-        const currentCourseIds = (await CourseServices.getCourseIds()).map((course: any)=> course.id);
-        const completedStudentCoursesId = courses.map((course: any)=> course.course_id);
+        const currentCourseIds = (await CourseServices.getCourseIds()).map((course)=> course.id);
+        const completedStudentCoursesId = courses.map((course)=> course.course_id);
         
         const areCourseIdValid = completedStudentCoursesId.every((id)=> currentCourseIds.includes(id));
        
@@ -506,7 +484,8 @@ export class StudentServices{
           throw CustomError.notFound(`Courses are invalid`);
         }
 
-        const addCourses = await prisma.studentCourse.createMany({
+        // courses the student already has are skipped, so the count can be lower than courses.length
+        await prisma.studentCourse.createMany({
           data:courses.map((course)=> {
             return{
               student_id:studentId,
@@ -517,16 +496,13 @@ export class StudentServices{
           skipDuplicates:true
         })
        
-        if(addCourses.count === courses.length){
-            return{
-             success:true,
-             message:'Courses were added succesfully'
-          }
+        return{
+         success:true,
+         message:'Courses were added succesfully'
         }
       }
      catch(error){
-      console.log(error);
-      throw CustomError.internalServerError('Internal Server Error');
+      throw CustomError.wrap(error);
      }
       
      }
@@ -548,8 +524,7 @@ export class StudentServices{
          return students
       }
       catch(error){
-         console.log(error);
-         throw CustomError.internalServerError('Internal Server Error');
+         throw CustomError.wrap(error);
       }
      }
 
@@ -590,8 +565,7 @@ export class StudentServices{
 
            return students;
          } catch (error) {
-           console.log(error);
-           throw CustomError.internalServerError('Internal Server Error');
+           throw CustomError.wrap(error);
          }
        }
 
@@ -600,14 +574,18 @@ export class StudentServices{
        const completedDate = new Date(completedAt!);
   
        try{
-          const [studentExist,courseExist] = await Promise.allSettled([this.checkStudentById(student_id!),CourseServices.checkCourseById(course_id)]);
+           if(Number.isNaN(completedDate.getTime())){
+              throw CustomError.badRequest('Completed date is invalid');
+           }
+
+          const [studentExist,courseExist] = await Promise.all([this.checkStudentById(student_id!),CourseServices.checkCourseById(course_id)]);
 
            if(!studentExist){
               throw CustomError.notFound('Student does not exist');
            }
 
            if(!courseExist){
-              throw CustomError.notFound('Student does not exist');
+              throw CustomError.notFound('Course does not exist');
            }
 
            await prisma.studentCourse.update({
@@ -629,8 +607,10 @@ export class StudentServices{
         }
          
         catch (error) {
-           console.log(error);
-           throw CustomError.internalServerError('Internal Server Error');
+           if(Util.isPrismaError(error,'P2025')){
+              throw CustomError.notFound('Student has not taken this course');
+           }
+           throw CustomError.wrap(error);
          }
       }
 }

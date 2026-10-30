@@ -1,17 +1,10 @@
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
 import { Enrollment, EnrollmentUpdate } from "../interfaces/enrollment.interface";
-import { CourseServices } from "./course.service";
 import { EventService } from "./event.service";
 import { StudentServices } from "./student.service";
-import { Prisma } from "@prisma/client";
-
-type EnrollmentWithRelations = Prisma.EnrollmentsGetPayload<{
-  include: { student: true; event: { include: { course: true } } };
-}>;
 
 export class EnrollmentService{
-    courseService = new CourseServices();
     studentService = new StudentServices();
     eventService = new EventService();
 
@@ -30,10 +23,7 @@ export class EnrollmentService{
        }
         
        catch(error){
-       if(error instanceof Error){
-             throw CustomError.internalServerError(error.message)
-            }
-             throw CustomError.internalServerError('Internal server error');
+       throw CustomError.wrap(error);
      }
     }
      
@@ -48,11 +38,8 @@ export class EnrollmentService{
       }
   
       catch(error){
-       if(error instanceof Error){
-             throw CustomError.internalServerError(error.message);
-            }
-             throw CustomError.internalServerError('Internal server error');
-      }
+       throw CustomError.wrap(error);
+     }
     }
 
     public createEnrollment = async(enrollment:Enrollment) =>{
@@ -90,10 +77,7 @@ export class EnrollmentService{
        
      }
      catch(error){
-       if(error instanceof Error){
-             throw CustomError.internalServerError(error.message);
-            }
-             throw CustomError.internalServerError('Internal server error');
+       throw CustomError.wrap(error);
      }
 
     }
@@ -110,16 +94,18 @@ export class EnrollmentService{
             event_id: eventId,
           },
           include: {
-            student: true,
+            student: {
+              select: { id: true, first_name: true, last_name: true, phone: true, email: true },
+            },
             event: {
               include: {
-                course: true,
+                course: { select: { name: true } },
               },
             },
           },
         });
 
-        const result = enrollments.map((enroll: EnrollmentWithRelations) => ({
+        const result = enrollments.map((enroll) => ({
           enrollmentId:enroll.id,
           studentId: (enroll.student.id),
           fullName: `${enroll.student.first_name} ${enroll.student.last_name}`,
@@ -136,10 +122,7 @@ export class EnrollmentService{
       
 
       catch(error){
-       if(error instanceof Error){
-             throw CustomError.internalServerError(error.message);
-            }
-             throw CustomError.internalServerError('Internal server error');
+       throw CustomError.wrap(error);
      }
     }
 
@@ -161,10 +144,7 @@ export class EnrollmentService{
          }
      }
       catch(error){
-       if(error instanceof Error){
-             throw CustomError.internalServerError(error.message);
-            }
-             throw CustomError.internalServerError('Internal server error');
+       throw CustomError.wrap(error);
      }
      
     }
@@ -189,10 +169,7 @@ export class EnrollmentService{
          }
      }
       catch(error){
-       if(error instanceof Error){
-             throw CustomError.internalServerError(error.message);
-            }
-             throw CustomError.internalServerError('Internal server error');
+       throw CustomError.wrap(error);
      }
      
     }
@@ -209,7 +186,6 @@ export class EnrollmentService{
             student_id: studentId,
           },
           include: {
-            student: true,
             event: {
               include: {
                 course: true,
@@ -218,7 +194,7 @@ export class EnrollmentService{
           },
         }))
         
-        const result = studentEnrollments.map((enrollment: EnrollmentWithRelations)=>(
+        const result = studentEnrollments.map((enrollment)=>(
           {
             eventId:enrollment.event.id,
             eventName:(enrollment.event.name),
@@ -233,10 +209,7 @@ export class EnrollmentService{
 
       }
       catch(error){
-       if(error instanceof Error){
-             throw CustomError.internalServerError(error.message);
-            }
-             throw CustomError.internalServerError('Internal server error');
+       throw CustomError.wrap(error);
      }
     }
 
@@ -245,17 +218,6 @@ export class EnrollmentService{
           try {
             const filterCondition = this.studentService.getFilterStudentCondition(query);
                 
-            const studentsEnrolled = await prisma.enrollments.findMany({
-              select:{
-                student_id:true
-              },
-              where:{
-                event_id:eventId
-              }
-            })
-            
-            const enrolledStudentIds = studentsEnrolled.map((enrollment: any) => enrollment.student_id);
-            
             const students = await prisma.students.findMany({
                select:{
               id:true,
@@ -266,13 +228,13 @@ export class EnrollmentService{
             },
              where: {
                 OR:query!="All" ? filterCondition : undefined,
-                id: { notIn:enrolledStudentIds}
+                Enrollments: { none: { event_id: eventId } }
               },
              })
              
              return students;
           } catch (error) {
-            throw CustomError.internalServerError('Internal Server Error');
+            throw CustomError.wrap(error);
           }
         }
 
@@ -283,7 +245,7 @@ export class EnrollmentService{
               return totalEnrollments;
            }
            catch (error) {
-            throw CustomError.internalServerError('Internal Server Error');
+            throw CustomError.wrap(error);
           }
         }
 }

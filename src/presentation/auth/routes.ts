@@ -49,6 +49,8 @@ export class AuthRoutes {
 
     router.get('/refresh-token/:id',
       AuthMiddleware.validateJWT,
+      check('id').isInt({min:1}).withMessage('Invalid id'),
+      FieldValidatorMiddleware.fieldValidator,
       controller.refreshToken
     )
 

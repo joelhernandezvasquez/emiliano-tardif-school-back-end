@@ -42,19 +42,20 @@ export class CourseController{
      .catch((error)=> this.handleError(error,res))
    }
 
-   public updateCourse = async(req:Request,res:Response) =>{
-     const {id} = req.params;
-     
-     const currentImageUrl = await CourseServices.checkCourseById(+id);
+   public updateCourse = (req:Request,res:Response) =>{
+     const id = parseInt(req.params.id);
 
-     const courseData = {
-       name:req.body.name.trim(),
-       description:req.body.description.trim(),
-       level:req.body.level.trim(),
-       image_url:req.file ? `/images/${req.file.filename}` : currentImageUrl?.image_url
-     }
+     CourseServices.checkCourseById(id)
+     .then((currentCourse)=>{
+       const courseData = {
+         name:req.body.name.trim(),
+         description:req.body.description.trim(),
+         level:req.body.level.trim(),
+         image_url:req.file ? `/images/${req.file.filename}` : currentCourse?.image_url
+       }
 
-     this.courseService.updateCourse(parseInt(id),courseData)
+       return this.courseService.updateCourse(id,courseData);
+     })
      .then((course)=> res.json(course))
      .catch((error)=> this.handleError(error,res))
    }

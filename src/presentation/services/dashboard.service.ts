@@ -21,9 +21,9 @@ export class DashboardServices{
     public getDashboardSummary = async ():Promise<DashboardSummary> =>{
       try{
         const [totalStudents,totalEnrollments,totalEvents] = await Promise.all([
-          (await this.studentServices.getAllStudents()).length,
-          (await this.enrollmentServices.getAllEnrollments()),
-          (await this.eventServices.getAllEvents()).length,
+          this.studentServices.getTotalStudents(),
+          this.enrollmentServices.getAllEnrollments(),
+          this.eventServices.getTotalEvents(),
         ])
 
        return{

@@ -7,6 +7,14 @@ import { CourseServices } from "./course.service";
 
 export type CompletionStatus = 'completed' | 'not-completed';
 
+const studentContactSelect = {
+    id: true,
+    first_name: true,
+    last_name: true,
+    email: true,
+    phone: true,
+} satisfies Prisma.StudentsSelect;
+
 export class ReportServices{
      courseService = new CourseServices();
      
@@ -25,13 +33,7 @@ export class ReportServices{
             },
             include: {
                 student: {
-                select: {
-                    id: true,
-                    first_name: true,
-                    last_name: true,
-                    email: true,
-                    phone: true,
-                },
+                select: studentContactSelect,
                 },
             },
              orderBy: { completedAt: 'desc' },
@@ -47,7 +49,7 @@ export class ReportServices{
            return {hasCompleted,notCompleted};
          }  
           catch(err){
-                  throw CustomError.internalServerError('internal server error');
+                  throw CustomError.wrap(err);
         }
      }
 
@@ -68,7 +70,7 @@ export class ReportServices{
                    where: { course_id: courseId },
                    include: {
                      student: {
-                       select: { id: true, first_name: true, last_name: true, email: true, phone: true },
+                       select: studentContactSelect,
                      },
                    },
                    orderBy: { completedAt: { sort: 'desc', nulls: 'last' } },
@@ -80,7 +82,7 @@ export class ReportServices{
              : await Promise.all([
                  prisma.students.findMany({
                    where: { NOT: { StudentCourses: { some: { course_id: courseId } } } },
-                   select: { id: true, first_name: true, last_name: true, email: true, phone: true },
+                   select: studentContactSelect,
                    orderBy: { id: 'asc' },
                    skip,
                    take: limit,
@@ -94,8 +96,7 @@ export class ReportServices{
            };
          }
           catch(err){
-                if(err instanceof CustomError) throw err;
-                throw CustomError.internalServerError('internal server error');
+                throw CustomError.wrap(err);
         }
      }
 
@@ -133,7 +134,7 @@ export class ReportServices{
                    where: { course_id: courseId, student: studentSearch },
                    include: {
                      student: {
-                       select: { id: true, first_name: true, last_name: true, email: true, phone: true },
+                       select: studentContactSelect,
                      },
                    },
                    orderBy: { completedAt: { sort: 'desc', nulls: 'last' } },
@@ -145,7 +146,7 @@ export class ReportServices{
              : await Promise.all([
                  prisma.students.findMany({
                    where: notCompletedWhere,
-                   select: { id: true, first_name: true, last_name: true, email: true, phone: true },
+                   select: studentContactSelect,
                    orderBy: { id: 'asc' },
                    skip,
                    take: limit,
@@ -159,8 +160,7 @@ export class ReportServices{
            };
          }
           catch(err){
-                if(err instanceof CustomError) throw err;
-                throw CustomError.internalServerError('internal server error');
+                throw CustomError.wrap(err);
         }
      }
 }

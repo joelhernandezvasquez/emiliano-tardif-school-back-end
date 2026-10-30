@@ -1,3 +1,5 @@
+import { Prisma } from "@prisma/client";
+
 export class Util{
 
     static formatCourseLevel = (level:string) =>{
@@ -9,4 +11,8 @@ export class Util{
     .replace(/RENACER_HOMBRE/, "Renacer Hombres")
     .replace(/RENACER_PAREJAS/, "Renacer Parejas");
 }
+
+    static isPrismaError = (error:unknown,code:string) =>{
+       return error instanceof Prisma.PrismaClientKnownRequestError && error.code === code;
+    }
 }

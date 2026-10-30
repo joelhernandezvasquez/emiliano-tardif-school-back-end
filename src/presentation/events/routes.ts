@@ -15,29 +15,32 @@ export class EventRoutes{
    const controller = new EventController(eventService);
    const enrollmentController = new EnrollmentController(enrollmentService);
 
-  router.get('/pagination',[AuthMiddleware.validateJWT],controller.getEventPagination);
+  const eventFields = [
+     check('name').isString().notEmpty().withMessage("Name of the event is required."),
+     check('course_id').isInt({min:1}).withMessage('Course ID is required.'),
+     check('price').isInt({min:0}).withMessage('Price is required.'),
+     check('start_date').isString().isISO8601().withMessage('Please provide the day the event start.'),
+     check('end_date').isString().isISO8601().withMessage('Please provide the day the event ends.'),
+     check('location').isString().notEmpty().withMessage('Location cannot be empty.'),
+     check('status').isIn(['upcoming','ongoing','completed','cancelled']).withMessage('status is invalid.')
+  ];
+  const validId = check('id').isInt({min:1}).withMessage('Invalid id');
+  const validPage = check('page').optional().isInt({min:1}).withMessage('Invalid page');
+
+  router.get('/pagination',[AuthMiddleware.validateJWT],validPage,FieldValidatorMiddleware.fieldValidator,controller.getEventPagination);
 
   router.get('/summary',[AuthMiddleware.validateJWT],controller.getEventSummary)
 
-  router.get('/search',[AuthMiddleware.validateJWT],controller.searchEvents);
+  router.get('/search',[AuthMiddleware.validateJWT],validPage,FieldValidatorMiddleware.fieldValidator,controller.searchEvents);
 
    router.post('/create',
-    [
-     check('name').notEmpty().withMessage("Name of the event is required."),
-     check('course_id').notEmpty().withMessage('Course ID is required.'),
-     check('price').notEmpty().withMessage('Price is required.'),
-     check('start_date').notEmpty().withMessage('Please provide the day the event start.'),
-     check('end_date').notEmpty().withMessage('Please provide the day the event ends.'),
-     check('location').notEmpty().withMessage('Location cannot be empty.'),
-     check('status').notEmpty().withMessage('Status of the event cannot be empty.'),
-     check('status').isIn(['upcoming','ongoing','completed','cancelled']).withMessage('status is invalid.')
-    ],
-    FieldValidatorMiddleware.fieldValidator,
     [AuthMiddleware.validateJWT],
+    eventFields,
+    FieldValidatorMiddleware.fieldValidator,
     controller.createEvent
 )
 
-  router.post('/:id/complete',[AuthMiddleware.validateJWT],controller.completeEvent)
+  router.post('/:id/complete',[AuthMiddleware.validateJWT],validId,FieldValidatorMiddleware.fieldValidator,controller.completeEvent)
 
    router.get('/list',
     [AuthMiddleware.validateJWT],
@@ -46,26 +49,26 @@ export class EventRoutes{
 
    router.get('/:id',
     [AuthMiddleware.validateJWT],
+    validId,
+    FieldValidatorMiddleware.fieldValidator,
     controller.getEvent
    )
 
 
    router.put('/:id',
-    [
-     check('name').notEmpty().withMessage("Name of the event is required."),
-     check('course_id').notEmpty().withMessage('Course ID is required.'),
-     check('price').notEmpty().withMessage('Price is required.'),
-     check('start_date').notEmpty().withMessage('Please provide the day the event start.'),
-     check('end_date').notEmpty().withMessage('Please provide the day the event ends.'),
-     check('location').notEmpty().withMessage('Location cannot be empty.'),
-     check('status').notEmpty().withMessage('Status of the event cannot be empty.'),
-     check('status').isIn(['upcoming','ongoing','completed','cancelled']).withMessage('status is invalid.')
-    ],
     [AuthMiddleware.validateJWT],
+    validId,
+    eventFields,
+    FieldValidatorMiddleware.fieldValidator,
     controller.updateEvent
    )
 
-   router.get('/:eventId/enrollments',[AuthMiddleware.validateJWT],enrollmentController.getEnrollmentsForEvent)
+   router.get('/:eventId/enrollments',
+    [AuthMiddleware.validateJWT],
+    check('eventId').isInt({min:1}).withMessage('Invalid event id'),
+    FieldValidatorMiddleware.fieldValidator,
+    enrollmentController.getEnrollmentsForEvent
+   )
    
    
    return router;

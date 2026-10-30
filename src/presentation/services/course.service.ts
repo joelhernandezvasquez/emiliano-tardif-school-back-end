@@ -22,7 +22,7 @@ export class CourseServices{
           return course;
         }
         catch(error){
-            throw CustomError.internalServerError('Internal Server Error');
+            throw CustomError.wrap(error);
         }
     }
 
@@ -34,13 +34,13 @@ export class CourseServices{
           return course;
         }
         catch(error){
-            throw CustomError.internalServerError('Internal Server Error');
+            throw CustomError.wrap(error);
         }
     }
 
     public createCourse = async(course:Course) =>{
      try{
-    
+
        const isCourseCreated = await this.checkCourse(course.name);
 
        if(isCourseCreated){
@@ -59,7 +59,10 @@ export class CourseServices{
        }
      }
      catch(error){
-        throw CustomError.badRequest('Course already exist');
+        if(Util.isPrismaError(error,'P2002')){
+          throw CustomError.badRequest('Course already exist');
+        }
+        throw CustomError.wrap(error);
      }
     }
 
@@ -69,7 +72,7 @@ export class CourseServices{
        return courses;
      }
      catch(error){
-        throw CustomError.internalServerError('Internal Server Error');
+        throw CustomError.wrap(error);
      }
     }
 
@@ -83,14 +86,14 @@ export class CourseServices{
         return course;
       }
       catch(error){
-         throw CustomError.badRequest('Course does not exist');
+         throw CustomError.wrap(error);
       }
     }
 
     public updateCourse = async(courseId:number,courseData:Course) =>{
       try{
          const course = await CourseServices.checkCourseById(courseId);
-         
+
          if(!course){
            throw CustomError.badRequest('Course does not exist');
          }
@@ -99,14 +102,10 @@ export class CourseServices{
           data:courseData,
           where:{id:courseId}
          })
-        
+
          if (courseData.image_url && course.image_url && course.image_url !== courseData.image_url) {
-             const oldImagePath = path.join(process.cwd(), 'public', course.image_url);
-             fs.unlink(oldImagePath, () => {});
+             this.removeImage(course.image_url);
          }
-
-
-
 
          return{
           success:true,
@@ -116,20 +115,36 @@ export class CourseServices{
 
       }
       catch(error){
-      throw CustomError.badRequest('Course does not exist');
+        if(Util.isPrismaError(error,'P2002')){
+          throw CustomError.badRequest('Course already exist');
+        }
+        throw CustomError.wrap(error);
       }
     }
 
     public deleteCourse = async(courseId:number) =>{
       try{
         const course = await CourseServices.checkCourseById(courseId);
-        
+
         if(!course){
           throw CustomError.notFound('Course not found');
         }
-         await prisma.courses.delete({
-          where:{id:courseId}
-         })
+
+        // events (and their enrollments) are history, so they block the delete instead of being removed with the course
+        const eventsCount = await prisma.events.count({where:{course_id:courseId}});
+
+        if(eventsCount > 0){
+          throw CustomError.badRequest('Course has events and cannot be deleted');
+        }
+
+        await prisma.$transaction([
+          prisma.studentCourse.deleteMany({where:{course_id:courseId}}),
+          prisma.courses.delete({where:{id:courseId}})
+        ])
+
+        if(course.image_url){
+          this.removeImage(course.image_url);
+        }
 
          return{
           success:true,
@@ -137,8 +152,13 @@ export class CourseServices{
          }
       }
       catch(error){
-        throw CustomError.notFound('Course not found')
+        throw CustomError.wrap(error,'Could not delete course');
       }
+    }
+
+    private removeImage = (imageUrl:string) =>{
+      const imagePath = path.join(process.cwd(), 'public', imageUrl);
+      fs.unlink(imagePath, () => {});
     }
 
     public static getTotalCourse = async() =>{
@@ -147,7 +167,7 @@ export class CourseServices{
        return totalCourses - 2; // we make it minus 2 since either Man or Women will not take renacer de hombres o mujeres
       }
       catch(error){
-        throw CustomError.internalServerError(error as string);
+        throw CustomError.wrap(error);
       }
     }
 
@@ -160,20 +180,20 @@ export class CourseServices{
           },
           orderBy: { level: 'asc' }
        })
-       
+
        const coursesFormatted = coursesByLevel.map((item: CourseLevelGroup)=>{
         return{
           level:Util.formatCourseLevel(item.level.toString()),
           courseLevelQuantity:item._count.level
         }
-       
+
        })
-       
+
        return coursesFormatted;
-      
+
       }
       catch(error){
-        throw CustomError.internalServerError(error as string);
+        throw CustomError.wrap(error);
       }
     }
 
@@ -197,8 +217,8 @@ export class CourseServices{
     }
 
       public searchCourses = async (courseQueryParam:string) => {
-        
-          try {  
+
+          try {
             let whereClause;
 
             if (courseQueryParam.toUpperCase().includes('RENACER')) {
@@ -211,11 +231,11 @@ export class CourseServices{
                   ]
                 }
               };
-            } 
+            }
             else if(courseQueryParam === 'all' || courseQueryParam===""){
               whereClause = {}
             }
-            
+
             else {
               const courseLevel = this.formatCourseLevel(courseQueryParam);
               whereClause = { level: courseLevel };
@@ -224,18 +244,13 @@ export class CourseServices{
             const courses = await prisma.courses.findMany({
               where: whereClause
             });
-             
+
             return courses;
 
           } catch (error) {
-            if (error instanceof CustomError) {
-              throw error;
-            }
-            throw CustomError.internalServerError('Internal Server Error');
+            throw CustomError.wrap(error);
           }
         }
 
 
 }
-
-
