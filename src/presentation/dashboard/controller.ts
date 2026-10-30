@@ -1,9 +1,6 @@
 import { Request,Response } from "express";
 import { DashboardServices } from "../services/dashboard.service";
-import { StudentServices } from "../services/student.service";
 import { CustomError } from "../../domain/errors/custom.error";
-import { Student } from "../interfaces/student.interface";
-import { StudentCourse } from "../interfaces/studentCourse.interface";
 
 export class DashboardController{
 

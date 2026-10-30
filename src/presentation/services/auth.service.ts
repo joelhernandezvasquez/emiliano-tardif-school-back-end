@@ -2,6 +2,7 @@ import { bcryptAdapter } from "../../config/bcrypt.adapter";
 import { JwtAdapter } from "../../config/jwt.adapter";
 import { prisma } from "../../data/postgres";
 import { CustomError } from "../../domain/errors/custom.error";
+import { Util } from "../../config/util";
 
 interface User{
     name?:string,
@@ -36,8 +37,10 @@ export class AuthService{
         } 
    
         catch(error){
-          console.log(error);
-          throw CustomError.internalServerError('Error while creating user')
+          if(Util.isPrismaError(error,'P2002')){
+            throw CustomError.badRequest('Email already exist');
+          }
+          throw CustomError.wrap(error,'Error while creating user');
         }
        }
 
@@ -57,11 +60,11 @@ export class AuthService{
      const{password_hash,...userEntity} = user;
 
     const token = await JwtAdapter.generateToken({id:user.id});
-   
-    const expiresAt = JwtAdapter.decodeTokenExpiration(token as string);
 
     if(!token)
     throw CustomError.internalServerError('Error while creating JWT')
+
+    const expiresAt = JwtAdapter.decodeTokenExpiration(token as string);
 
       return{
         user:userEntity,
@@ -77,14 +80,14 @@ export class AuthService{
       })
       
       if(!userIsValid){
-       throw CustomError.internalServerError('invalid user');
+       throw CustomError.unauthorized('Invalid user');
       }
       const token = await JwtAdapter.generateToken({id:userId});
       return token;
       }
 
       catch(error){
-        throw CustomError.internalServerError('Error while generating JWT')
+        throw CustomError.wrap(error,'Error while generating JWT');
       }
       
      

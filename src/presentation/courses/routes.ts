@@ -12,13 +12,14 @@ export class CourseRoutes{
      const router = Router();
      const courseService = new CourseServices();
      const courseController = new CourseController(courseService);
+     const validId = check('id').isInt({min:1}).withMessage('Invalid id');
      
      router.post('/create',
         AuthMiddleware.validateJWT,
         multerAdapter.upload().single('image_file'),
         [
-         check('name').notEmpty().withMessage('Course name cannot be empty.'),
-         check('description').notEmpty().withMessage("Course description cannot be empty"),
+         check('name').isString().notEmpty().withMessage('Course name cannot be empty.'),
+         check('description').isString().notEmpty().withMessage("Course description cannot be empty"),
          check('level').notEmpty().withMessage('Course Level cannot be empty'),
          check('level').isIn(['NIVEL_1_JESUS_ESTA_VIVO','NIVEL_2_JESUS_NOS_CAPACITA','NIVEL_3_JESUS_NOS_ENVIA','RENACER_MUJERES','RENACER_HOMBRE','RENACER_PAREJAS']).withMessage('Course/Retreat Level does not match.')
         ],
@@ -42,6 +43,8 @@ export class CourseRoutes{
     )
     router.get('/:id',
         [AuthMiddleware.validateJWT],
+        validId,
+        FieldValidatorMiddleware.fieldValidator,
         courseController.getACourse
     )
 
@@ -49,8 +52,9 @@ export class CourseRoutes{
         AuthMiddleware.validateJWT,
         multerAdapter.upload().single('image_file'),
         [
-         check('name').notEmpty().withMessage('Course name cannot be empty.'),
-         check('description').notEmpty().withMessage("Course description cannot be empty"),
+         validId,
+         check('name').isString().notEmpty().withMessage('Course name cannot be empty.'),
+         check('description').isString().notEmpty().withMessage("Course description cannot be empty"),
          check('level').notEmpty().withMessage('Course Level cannot be empty'),
          check('level').isIn(['NIVEL_1_JESUS_ESTA_VIVO','NIVEL_2_JESUS_NOS_CAPACITA','NIVEL_3_JESUS_NOS_ENVIA','RENACER_MUJERES','RENACER_HOMBRE','RENACER_PAREJAS']).withMessage('Course/Retreat Level does not match.')
         ],
@@ -59,6 +63,8 @@ export class CourseRoutes{
     )
     router.delete('/:id',
     [AuthMiddleware.validateJWT],
+    validId,
+    FieldValidatorMiddleware.fieldValidator,
     courseController.deleteCourse
     )
 

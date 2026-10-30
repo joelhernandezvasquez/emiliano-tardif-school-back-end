@@ -72,7 +72,7 @@ export class EnrollmentController{
   public searchStudent = (req:Request,res:Response) =>{
        const {query} = req.query;
        const {eventId} = req.params;
-       const studentQuery = query?.toString() as string;
+       const studentQuery = typeof query === 'string' ? query : '';
 
        this.enrollmentService.searchStudent(studentQuery,+eventId)
        .then((students)=> res.json(students))

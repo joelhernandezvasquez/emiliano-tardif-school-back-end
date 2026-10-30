@@ -2,11 +2,11 @@ export interface Student{
     first_name:string,
     last_name:string,
     email?:string | null,
-    phone?:string,
-    gender:string,
+    phone:string,
+    gender?:string | null,
     direccion?: string,
     parroquia?: string,
-    asuntos_medicos:string,
+    asuntos_medicos?:string | null,
     active?:boolean
 }
 

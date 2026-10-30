@@ -33,6 +33,11 @@ Express + TypeScript + Prisma (Postgres) REST API. Layout is domain-folder-per-r
 - **Static/SPA fallback**: `Server` serves `public/` as static files and falls back to `public/index.html` for any non-matching, non-`/api` route (see the catch-all `app.get('*', ...)` in [src/presentation/server.ts](src/presentation/server.ts)).
 - **CORS**: allowed origins come from `CORS_ORIGINS` plus regex patterns permitting any `*.vercel.app` subdomain and any `localhost:<port>` origin (see `start()` in [src/presentation/server.ts](src/presentation/server.ts)).
 
+## Agents
+
+- `code-reviewer` ([.claude/agents/code-reviewer.md](.claude/agents/code-reviewer.md)): reviews and refactors code. Give it a file, folder, or resource (e.g. "courses") or let it review all of `src/`. It applies safe behavior-preserving refactors, verifies with `npm run build`, lists anything riskier as "needs approval", and never commits.
+- `security-auditor`: see Security below.
+
 ## Security
 
 A monthly audit is run by the `security-auditor` agent ([.claude/agents/security-auditor.md](.claude/agents/security-auditor.md)). It is read-only on source and writes one report per month to `security-reports/YYYY-MM.md` (findings are numbered `SEC-YYYY-MM-NN`). Read the latest report before security work, and mark findings resolved there when they are fixed.
